@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.env*
+!.env.example
+memory.md
+AGENTS.md
+CLAUDE.md
+docs/
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+*.tsbuildinfo
+next-env.d.ts
+.vercel
