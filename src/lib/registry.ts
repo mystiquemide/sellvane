@@ -1,4 +1,4 @@
-import { getAddress, type Address } from "viem";
+import { getAddress, type Address, type Hex } from "viem";
 import { MANAGER } from "./chain/config";
 import { MANAGER_ABI } from "./chain/abis";
 import { publicClient, withRetry } from "./chain/clients";
@@ -18,6 +18,8 @@ export type TokenRow = {
   teamAccount: Address;
   permission: SpendPermission;
   permissionHash: string;
+  /** Owner signature, present when the permission was registered before being approved on chain. */
+  signature: Hex | null;
   maxImpactBps: number;
   minSliceBps: number;
   deployBlock: string;
@@ -54,6 +56,7 @@ function mapRow(r: Record<string, unknown>): TokenRow {
     teamAccount: getAddress(r.team_account as string),
     permission: fromJson(r.permission as ReturnType<typeof toJson>),
     permissionHash: r.permission_hash as string,
+    signature: (r.signature as Hex | null) ?? null,
     maxImpactBps: Number(r.max_impact_bps),
     minSliceBps: Number(r.min_slice_bps),
     deployBlock: String(r.deploy_block),
@@ -96,11 +99,11 @@ export function parsePermission(raw: unknown): SpendPermission {
 }
 
 /**
- * Register a capped token. Nothing from the browser is trusted: the permission must be approved
- * on chain, name the Sellvane seller as spender, be a daily period, and the account must hold the
- * token, which must have a Uniswap v3 WETH pool.
+ * Register a capped token. Nothing from the browser is trusted: the permission must be approved on
+ * chain or carry a valid team-account signature, name the Sellvane seller as spender, be a daily
+ * period, and the account must hold the token, which must have a Uniswap v3 WETH pool.
  */
-export async function registerToken(p: SpendPermission, opts: { maxImpactBps?: number } = {}): Promise<TokenRow> {
+export async function registerToken(p: SpendPermission, opts: { maxImpactBps?: number; signature?: Hex } = {}): Promise<TokenRow> {
   if (p.spender !== sellerAddress()) throw new RegistryError(400, "This permission does not name the Sellvane seller as spender.");
   if (p.period !== ONE_DAY) throw new RegistryError(400, "Sellvane caps are daily. The permission period must be one day.");
   if (p.allowance <= BigInt(0)) throw new RegistryError(400, "The daily cap must be above zero.");
@@ -112,13 +115,24 @@ export async function registerToken(p: SpendPermission, opts: { maxImpactBps?: n
     throw new RegistryError(400, e.message);
   });
 
-  // The consent screen approves on chain; public RPC nodes can lag a few seconds behind it.
+  // If approval happened on chain, public RPC nodes can lag a few seconds behind it. With a
+  // signature in hand there is nothing to wait for.
   let approved = false;
-  for (let i = 0; i < 8 && !approved; i++) {
+  const tries = opts.signature ? 1 : 8;
+  for (let i = 0; i < tries && !approved; i++) {
     approved = await withRetry(() => publicClient.readContract({ address: MANAGER, abi: MANAGER_ABI, functionName: "isApproved", args: [p] }));
-    if (!approved) await new Promise((r) => setTimeout(r, 1500));
+    if (!approved && i < tries - 1) await new Promise((r) => setTimeout(r, 1500));
   }
-  if (!approved) throw new RegistryError(409, "This permission is not approved on Base yet. Sign it in your wallet, then try again.");
+  // Not approved yet: accept a valid owner signature instead (ERC-1271, or ERC-6492 for a wallet
+  // that is not deployed yet). The first sale then approves it on chain with this signature.
+  let signature: Hex | null = null;
+  if (!approved) {
+    const sigOk =
+      !!opts.signature &&
+      (await publicClient.verifyHash({ address: p.account, hash: permissionHash(p), signature: opts.signature }).catch(() => false));
+    if (!sigOk) throw new RegistryError(409, "This permission is neither approved on Base nor signed by the team account. Sign it in your wallet, then try again.");
+    signature = opts.signature!;
+  }
   const revoked = await withRetry(() => publicClient.readContract({ address: MANAGER, abi: MANAGER_ABI, functionName: "isRevoked", args: [p] }));
   if (revoked) throw new RegistryError(409, "This permission has been revoked.");
 
@@ -137,12 +151,12 @@ export async function registerToken(p: SpendPermission, opts: { maxImpactBps?: n
   const slug = info.token.toLowerCase();
 
   const [row] = await sql()`
-    insert into tokens (slug, token, symbol, name, decimals, total_supply, pool, pool_fee, team_account, permission, permission_hash, max_impact_bps, deploy_block)
+    insert into tokens (slug, token, symbol, name, decimals, total_supply, pool, pool_fee, team_account, permission, permission_hash, signature, max_impact_bps, deploy_block)
     values (${slug}, ${info.token}, ${info.symbol}, ${info.name}, ${info.decimals}, ${info.totalSupply.toString()}, ${pool.pool}, ${pool.fee},
-            ${p.account}, ${sql().json(toJson(p))}, ${hash}, ${impact}, ${block.toString()})
+            ${p.account}, ${sql().json(toJson(p))}, ${hash}, ${signature}, ${impact}, ${block.toString()})
     on conflict (slug) do update set
       team_account = excluded.team_account, permission = excluded.permission, permission_hash = excluded.permission_hash,
-      max_impact_bps = excluded.max_impact_bps, pool = excluded.pool, pool_fee = excluded.pool_fee, status = 'active'
+      signature = excluded.signature, max_impact_bps = excluded.max_impact_bps, pool = excluded.pool, pool_fee = excluded.pool_fee, status = 'active'
     returning *`;
   return mapRow(row);
 }

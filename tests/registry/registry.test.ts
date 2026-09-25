@@ -1,7 +1,8 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { findWethPool, readTokenInfo, TokenCheckError } from "@/lib/chain/token";
 import { getToken, parsePermission, registerToken, RegistryError } from "@/lib/registry";
-import { fromJson, toJson } from "@/lib/chain/permission";
+import { fromJson, signPermission, toJson } from "@/lib/chain/permission";
+import type { Hex } from "viem";
 import { sql } from "@/lib/store/db";
 import { deployment } from "@/lib/chain/config";
 
@@ -45,6 +46,17 @@ describe("token checks (Base mainnet)", () => {
     const p = { ...served(), salt: BigInt(999999) };
     await expect(registerToken(p)).rejects.toMatchObject({ status: 409 });
   }, 60000);
+
+  it("accepts a signed but not yet approved permission, and rejects a bad signature", async () => {
+    const fresh = { ...served(), salt: BigInt(Date.now()) };
+    const sig = await signPermission(fresh, process.env.TEAM_OWNER_PRIVATE_KEY as Hex);
+    await expect(registerToken(fresh, { signature: ("0x" + "11".repeat(65)) as Hex })).rejects.toMatchObject({ status: 409 });
+    const row = await registerToken(fresh, { signature: sig });
+    expect(row.signature).toBe(sig);
+    // Restore the live permission so the page keeps serving the approved one.
+    const back = await registerToken(served());
+    expect(back.signature).toBeNull();
+  }, 90000);
 
   it("registers the live test token after on-chain checks, idempotently", async () => {
     const row = await registerToken(served());

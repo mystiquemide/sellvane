@@ -32,7 +32,7 @@ export default function StartPage() {
             Your unlocked tokens must sit in a Coinbase Base Account (smart wallet). If they are in a multisig or another wallet, move the amount you plan to sell there first.
           </p>
         </section>
-        <StartFlow />
+        <StartFlow seller={process.env.SELLER_ADDRESS!} />
       </main>
     </>
   );

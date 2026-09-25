@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isAddress } from "viem";
 import { basescanAddress, short, tokenLabel, tokens } from "@/lib/format";
 
@@ -99,9 +99,11 @@ function TokenStep({ onChecked }: { onChecked: (c: Checked | null) => void }) {
         <button
           type="submit"
           disabled={busy}
-          className="rounded-full bg-marigold px-8 py-3 text-base font-medium text-ink transition-colors hover:bg-marigold-deep disabled:cursor-wait"
+          className={`rounded-full px-8 py-3 text-base font-medium transition-colors disabled:cursor-wait ${
+            checked ? "bg-ink text-white hover:bg-[#1a1a1a]" : "bg-marigold text-ink hover:bg-marigold-deep"
+          }`}
         >
-          {busy ? "Reading Base..." : "Check token"}
+          {busy ? "Reading Base..." : checked ? "Check another token" : "Check token"}
         </button>
       </form>
 
@@ -280,10 +282,194 @@ function LimitsStep({ c, onLimits }: { c: Checked; onLimits: (l: Limits | null) 
   );
 }
 
-export function StartFlow() {
+type Provider = { request: (a: { method: string; params?: unknown[] }) => Promise<unknown> };
+type SignedPermission = { signature: string; permission: Record<string, unknown> };
+type Registered = { slug: string; token: string; permissionHash: string };
+
+const BASE_HEX = "0x2105";
+
+function friendly(e: unknown): string {
+  const err = e as { code?: number; message?: string };
+  if (err?.code === 4001 || /reject|denied|cancel/i.test(err?.message ?? "")) return "You closed the wallet window. Nothing was signed.";
+  return err?.message?.split("\n")[0] ?? "Something went wrong. Try again.";
+}
+
+/** Step 3: connect the team's Base Account and sign the daily cap in Coinbase's own consent window. */
+function SignStep({ c, limits, seller, onDone }: { c: Checked; limits: Limits; seller: string; onDone: (r: Registered) => void }) {
+  const providerRef = useRef<Provider | null>(null);
+  const [account, setAccount] = useState<string | null>(null);
+  const [balance, setBalance] = useState<bigint | null>(null);
+  const [busy, setBusy] = useState<"connect" | "sign" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const provider = async (): Promise<Provider> => {
+    if (providerRef.current) return providerRef.current;
+    const { createBaseAccountSDK } = await import("@base-org/account/browser");
+    const sdk = createBaseAccountSDK({ appName: "Sellvane", appLogoUrl: `${window.location.origin}/icon.svg`, appChainIds: [8453] });
+    providerRef.current = sdk.getProvider() as unknown as Provider;
+    return providerRef.current;
+  };
+
+  const connect = async () => {
+    setError(null);
+    setBusy("connect");
+    try {
+      const p = await provider();
+      const accounts = (await p.request({ method: "eth_requestAccounts" })) as string[];
+      if ((await p.request({ method: "eth_chainId" })) !== BASE_HEX) {
+        await p.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_HEX }] });
+      }
+      const a = accounts[0];
+      setAccount(a);
+      const res = await fetch(`/api/balance?token=${c.token}&account=${a}`, { cache: "no-store" });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error);
+      setBalance(BigInt(j.balance));
+    } catch (e) {
+      setError(friendly(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const sign = async () => {
+    if (!account) return;
+    setError(null);
+    setBusy("sign");
+    try {
+      const p = await provider();
+      const { requestSpendPermission } = await import("@base-org/account/spend-permission/browser");
+      const signed = (await requestSpendPermission({
+        provider: p as never,
+        account,
+        spender: seller,
+        token: c.token,
+        chainId: 8453,
+        allowance: limits.capRaw,
+        periodInDays: 1,
+      })) as unknown as SignedPermission;
+      const res = await fetch("/api/tokens", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ permission: signed.permission, signature: signed.signature, maxImpactBps: limits.impactBps }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error);
+      onDone(j as Registered);
+    } catch (e) {
+      setError(friendly(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const empty = balance !== null && balance === BigInt(0);
+  return (
+    <div>
+      {!account ? (
+        <>
+          <p className="max-w-[640px] text-base leading-[1.6] text-muted">
+            Connect the Coinbase Base Account that holds the team&apos;s unlocked tokens. Sellvane never asks for a private key or seed phrase.
+          </p>
+          <button
+            type="button"
+            onClick={connect}
+            disabled={busy !== null}
+            className="mt-5 rounded-full bg-marigold px-8 py-4 text-base font-medium text-ink hover:bg-marigold-deep disabled:cursor-wait"
+          >
+            {busy === "connect" ? "Opening your wallet..." : "Connect Base Account"}
+          </button>
+        </>
+      ) : (
+        <>
+          <dl className="grid gap-6 sm:grid-cols-3">
+            {[
+              ["Team account", short(account)],
+              ["Holds", balance === null ? "..." : `${tokens(balance.toString(), c.decimals)} ${c.symbol}`],
+              ["Daily cap you are signing", `${tokens(limits.capRaw.toString(), c.decimals)} ${c.symbol}`],
+            ].map(([k, v]) => (
+              <div key={k} className="border-t border-dashed border-line pt-4">
+                <dt className="text-sm text-muted">{k}</dt>
+                <dd className="mt-1 font-mono text-lg">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          {empty ? (
+            <p className="mt-5 rounded-[16px] bg-butter px-5 py-3 text-base" role="alert">
+              This account holds none of this token. Move the unlocked tokens into this Base Account first, or connect the account that holds them.
+            </p>
+          ) : (
+            <>
+              <p className="mt-6 max-w-[680px] text-base leading-[1.6] text-muted">
+                Coinbase shows the exact limit before you approve: the token, the amount per day, and Sellvane&apos;s seller contract as the only spender. You can revoke it from your wallet any time.
+              </p>
+              <button
+                type="button"
+                onClick={sign}
+                disabled={busy !== null || balance === null}
+                className="mt-5 rounded-full bg-marigold px-8 py-4 text-base font-medium text-ink hover:bg-marigold-deep disabled:cursor-wait"
+              >
+                {busy === "sign" ? "Waiting for your signature..." : "Sign the daily cap"}
+              </button>
+            </>
+          )}
+        </>
+      )}
+      {error ? (
+        <p className="mt-5 rounded-[16px] bg-butter px-5 py-3 text-base" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function Done({ r }: { r: Registered }) {
+  const [copied, setCopied] = useState(false);
+  const url = typeof window === "undefined" ? `/live/${r.slug}` : `${window.location.origin}/live/${r.slug}`;
+  return (
+    <section aria-live="polite" className="rounded-[20px] bg-ink p-6 text-white md:p-10">
+      <p className="font-eyebrow text-sm uppercase tracking-[0.08em] text-white/70">Done</p>
+      <h2 className="mt-3 font-display text-[38px] leading-[1.1] md:text-[54px]">Your cap is live.</h2>
+      <p className="mt-4 max-w-[640px] text-lg leading-[1.6] text-white/80">
+        Sellvane checked it on Base. The agent now sells inside it, and holders can follow every move on the live page.
+      </p>
+      <p className="mt-4 font-mono text-sm text-white/70">Permission {short(r.permissionHash)}</p>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link href={`/live/${r.slug}`} className="rounded-full bg-marigold px-8 py-4 text-base font-medium text-ink hover:bg-marigold-deep">
+          Open your live page →
+        </Link>
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(url);
+              setCopied(true);
+            } catch {
+              window.prompt("Copy this link for holders", url);
+            }
+          }}
+          className="rounded-full bg-white px-8 py-4 text-base font-medium text-ink hover:bg-butter"
+        >
+          {copied ? "Link copied" : "Copy link for holders"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+export function StartFlow({ seller }: { seller: string }) {
   const [checked, setChecked] = useState<Checked | null>(null);
-  const [, setLimits] = useState<Limits | null>(null);
+  const [limits, setLimits] = useState<Limits | null>(null);
+  const [done, setDone] = useState<Registered | null>(null);
   const ready = checked && !checked.alreadyCapped;
+  if (done) {
+    return (
+      <div className="mx-auto max-w-[1200px] px-4 pb-24 md:px-6">
+        <Done r={done} />
+      </div>
+    );
+  }
   return (
     <div className="mx-auto grid max-w-[1200px] gap-6 px-4 pb-24 md:px-6">
       <StepShell n={1} title="Your token" active>
@@ -291,6 +477,13 @@ export function StartFlow() {
       </StepShell>
       <StepShell n={2} title="Your daily limit" active={!!ready}>
         {ready ? <LimitsStep key={checked.token} c={checked} onLimits={setLimits} /> : <p className="text-base text-muted">Check a token first.</p>}
+      </StepShell>
+      <StepShell n={3} title="Sign from your Base Account" active={!!(ready && limits)}>
+        {ready && limits ? (
+          <SignStep key={checked.token} c={checked} limits={limits} seller={seller} onDone={setDone} />
+        ) : (
+          <p className="text-base text-muted">Set a valid daily limit first.</p>
+        )}
       </StepShell>
     </div>
   );

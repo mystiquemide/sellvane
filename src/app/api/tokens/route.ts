@@ -17,7 +17,8 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
     if (!body?.permission) throw new RegistryError(400, "Missing permission.");
-    const row = await registerToken(parsePermission(body.permission), { maxImpactBps: Number(body.maxImpactBps) || undefined });
+    const signature = typeof body.signature === "string" && /^0x[0-9a-fA-F]+$/.test(body.signature) ? (body.signature as `0x${string}`) : undefined;
+    const row = await registerToken(parsePermission(body.permission), { maxImpactBps: Number(body.maxImpactBps) || undefined, signature });
     return NextResponse.json({ slug: row.slug, token: row.token, permissionHash: row.permissionHash }, { status: 201 });
   } catch (e) {
     if (e instanceof RegistryError) return NextResponse.json({ error: e.message }, { status: e.status });
