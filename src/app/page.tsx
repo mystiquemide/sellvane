@@ -1,4 +1,5 @@
 import { Nav } from "@/components/Nav";
+import { Footer } from "@/components/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { LiveStrip } from "@/components/landing/LiveStrip";
 import { HowItWorks } from "@/components/landing/HowItWorks";
@@ -20,6 +21,7 @@ export default function Home() {
         <ForLaunchpads />
         <BuiltWith />
       </main>
+      <Footer />
     </div>
   );
 }
