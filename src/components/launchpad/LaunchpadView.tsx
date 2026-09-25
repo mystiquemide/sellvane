@@ -2,6 +2,7 @@
 
 import { useToken } from "@/lib/useToken";
 import { TokensTable } from "./TokensTable";
+import { RequireIt } from "./RequireIt";
 
 export function LaunchpadView() {
   const s = useToken();
@@ -24,6 +25,7 @@ export function LaunchpadView() {
       </p>
     </section>
     <TokensTable s={s} />
+    <RequireIt />
     </>
   );
 }
