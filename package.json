@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "team:create": "tsx --env-file=.env.local scripts/create-team-account.ts"
+    "team:create": "tsx --env-file=.env.local scripts/create-team-account.ts",
+    "deploy": "tsx --env-file=.env.local scripts/deploy.ts"
   },
   "dependencies": {
     "@base-org/account": "^2.5.10",
