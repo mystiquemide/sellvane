@@ -62,8 +62,13 @@ export function BypassWatch({ s }: { s: TokenState }) {
                   </div>
                 </dl>
 
+                <p className="mt-6 font-mono text-sm text-muted">
+                  Checked every transfer from block {Number(s.data.scan.fromBlock).toLocaleString("en-US")} (token created) to block{" "}
+                  {Number(s.data.scan.toBlock).toLocaleString("en-US")}.
+                </p>
+
                 {uncappedMoves.length === 0 ? (
-                  <p className="mt-8 inline-block rounded-full bg-butter px-5 py-2 text-base">Nothing has left the team account outside the cap.</p>
+                  <p className="mt-4 inline-block rounded-full bg-butter px-5 py-2 text-base">In that range, nothing left the team account outside the cap.</p>
                 ) : (
                   <ul className="mt-8 divide-y divide-dashed divide-line border-y border-dashed border-line">
                     {uncappedMoves.map((m) => (

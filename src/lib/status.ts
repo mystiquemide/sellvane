@@ -2,10 +2,12 @@ import { getAddress, parseEventLogs, type Address, type Hex } from "viem";
 import { deployment, MANAGER } from "./chain/config";
 import { publicClient, withRetry } from "./chain/clients";
 import { ERC20_ABI, MANAGER_ABI, SELLER_ABI } from "./chain/abis";
-import { permissionHash, readCapStatus, type SpendPermission } from "./chain/permission";
+import { fromJson, permissionHash, readCapStatus, toJson, type SpendPermission } from "./chain/permission";
+import { sql } from "./store/db";
 import { readPool } from "./chain/pool";
 
-const CHUNK = BigInt(5000);
+// mainnet.base.org caps eth_getLogs at a 2,000 block range.
+const CHUNK = BigInt(2000);
 
 async function logsInChunks<T>(from: bigint, to: bigint, fetch: (a: bigint, b: bigint) => Promise<T[]>): Promise<T[]> {
   const out: T[] = [];
@@ -71,19 +73,52 @@ export async function outgoingMoves(team: Address, token: Address, seller: Addre
   return moves;
 }
 
+type ScanPayload = { perms: ReturnType<typeof toJson>[]; moves: OutgoingMove[] };
+
+/**
+ * Permissions and outgoing moves since the token was created, scanned incrementally: progress is
+ * saved in the database so each request only reads blocks it has not seen before.
+ */
+async function scanTeam(team: Address, token: Address, seller: Address, deployBlock: bigint, toBlock: bigint) {
+  const key = `${team}:${token}`.toLowerCase();
+  const [row] = await sql()`select to_block, payload from scan_cache where key = ${key}`;
+  const prev: ScanPayload = row ? (row.payload as ScanPayload) : { perms: [], moves: [] };
+  const start = row ? BigInt(row.to_block) + BigInt(1) : deployBlock;
+
+  let perms = prev.perms.map(fromJson);
+  let moves = prev.moves;
+  if (start <= toBlock) {
+    const [newPerms, newMoves] = await Promise.all([
+      teamPermissions(team, token, start, toBlock),
+      outgoingMoves(team, token, seller, start, toBlock),
+    ]);
+    const byHash = new Map(perms.map((x) => [permissionHash(x), x]));
+    for (const x of newPerms) byHash.set(permissionHash(x), x);
+    perms = [...byHash.values()];
+    const byTx = new Map(moves.map((m) => [m.txHash, m]));
+    for (const m of newMoves) byTx.set(m.txHash, m);
+    moves = [...byTx.values()].sort((a, b) => Number(BigInt(b.blockNumber) - BigInt(a.blockNumber)));
+    const payload: ScanPayload = { perms: perms.map(toJson), moves };
+    await sql()`
+      insert into scan_cache (key, to_block, payload) values (${key}, ${toBlock.toString()}, ${sql().json(payload)})
+      on conflict (key) do update set to_block = excluded.to_block, payload = excluded.payload, updated_at = now()`;
+  }
+  return { perms, moves };
+}
+
 /** Everything the public token page needs, read from chain. */
 export async function tokenSnapshot(p: SpendPermission) {
   const d = deployment();
   const fromBlock = BigInt(process.env.TOKEN_DEPLOY_BLOCK ?? "0");
   const toBlock = await publicClient.getBlockNumber();
-  const [symbol, supply, teamBalance, pool, perms, moves] = await Promise.all([
+  const [symbol, supply, teamBalance, pool, scanned] = await Promise.all([
     publicClient.readContract({ address: d.token, abi: ERC20_ABI, functionName: "symbol" }),
     publicClient.readContract({ address: d.token, abi: ERC20_ABI, functionName: "totalSupply" }),
     publicClient.readContract({ address: d.token, abi: ERC20_ABI, functionName: "balanceOf", args: [d.team] }),
     readPool(d.pool, d.token),
-    teamPermissions(d.team, d.token, fromBlock, toBlock),
-    outgoingMoves(d.team, d.token, d.seller, fromBlock, toBlock),
+    scanTeam(d.team, d.token, d.seller, fromBlock, toBlock),
   ]);
+  const { perms, moves } = scanned;
   if (!perms.some((x) => permissionHash(x) === permissionHash(p))) perms.push(p);
   const permissions: PermissionView[] = await Promise.all(
     perms.map(async (x) => {
@@ -122,6 +157,8 @@ export async function tokenSnapshot(p: SpendPermission) {
       periodEnd: active.length ? Math.min(...active.map((x) => x.periodEnd)) : null,
     },
     permissions,
+    // Block range the bypass check covered, so a zero has a stated scope.
+    scan: { fromBlock: fromBlock.toString(), toBlock: toBlock.toString() },
     uncappedMoves: moves.filter((m) => !m.capped),
     cappedMoves: moves.filter((m) => m.capped).length,
     sellvanePermission: permissionHash(p),

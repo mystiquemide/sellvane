@@ -68,22 +68,23 @@ export function CapCard({ s }: { s: TokenState }) {
                   </p>
                 ) : null}
 
+                {/* The three numbers that explain the headline, directly under it. */}
+                <dl className="mt-6 grid gap-6 sm:grid-cols-3">
+                  <Stat label="Already sold today" value={tokens(cap.spentThisPeriod)} />
+                  <Stat label="Still allowed today" value={tokens(cap.remaining)} />
+                  <Stat
+                    label="Cap resets in"
+                    value={until(cap.periodEnd)}
+                    sub={cap.periodEnd ? `at ${utcTime(cap.periodEnd)}, 24 hours after the last reset` : undefined}
+                  />
+                </dl>
+
                 <div className="mt-8">
                   <VaneTrack
                     filled={share(cap.spentThisPeriod, cap.allowance)}
                     label={`${tokens(cap.spentThisPeriod)} of ${tokens(cap.allowance)} tokens sold today`}
                   />
                 </div>
-
-                <dl className="mt-8 grid gap-6 sm:grid-cols-3">
-                  <Stat label="Sold today" value={tokens(cap.spentThisPeriod)} />
-                  <Stat label="Left today" value={tokens(cap.remaining)} />
-                  <Stat
-                    label="Resets in"
-                    value={until(cap.periodEnd)}
-                    sub={cap.periodEnd ? `at ${utcTime(cap.periodEnd)}, 24 hours after the last reset` : undefined}
-                  />
-                </dl>
               </>
             );
           })()

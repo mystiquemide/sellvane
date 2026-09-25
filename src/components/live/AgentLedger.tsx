@@ -4,7 +4,13 @@ import type { TokenData, TokenState } from "@/lib/useToken";
 type Row = TokenData["decisions"][number];
 
 const STAMP: Record<Row["action"], string> = { SELL: "Sold", WAIT: "Waited", SKIP: "Paused", BLOCKED: "Blocked" };
-const BY: Record<string, string> = { model: "agent", fallback: "agent, safe default", rule: "rule", manual: "by hand" };
+const BY: Record<string, string> = {
+  model: "Decided by the agent",
+  fallback: "Agent unavailable, safe default applied",
+  rule: "Decided by a fixed rule",
+  manual: "Sent by hand as a proof",
+};
+const REASON_LABEL: Record<string, string> = { model: "The agent's reason", fallback: "Note", rule: "Rule", manual: "Note" };
 
 /** Torn paper edge, drawn as a repeating zigzag in the receipt color. */
 function Tear({ flip = false }: { flip?: boolean }) {
@@ -25,15 +31,18 @@ function Stamp({ action }: { action: Row["action"] }) {
     action === "SELL"
       ? "bg-marigold text-ink"
       : action === "BLOCKED"
-        ? "bg-ink text-white"
+        ? "bg-white text-ink"
         : "border border-ink text-ink";
   return <span className={`inline-block min-w-[84px] rounded-full px-3 py-1 text-center text-xs uppercase tracking-[0.06em] ${style}`}>{STAMP[action]}</span>;
 }
 
 function Line({ d }: { d: Row }) {
   const when = new Date(d.at);
+  const blocked = d.action === "BLOCKED";
+  // The refused sale is the cleanest proof the limit holds, so it prints inverted.
+  const tone = blocked ? "-mx-5 bg-ink px-5 text-white md:-mx-10 md:px-10 [&_.text-muted]:text-white/70" : "";
   return (
-    <li className="grid gap-x-6 gap-y-2 border-b border-dashed border-ink/20 py-5 last:border-b-0 md:grid-cols-[110px_110px_1fr_auto]">
+    <li className={`grid gap-x-6 gap-y-2 border-b border-dashed border-ink/20 py-5 last:border-b-0 md:grid-cols-[110px_110px_1fr_auto] ${tone}`}>
       <div className="font-mono text-sm">
         <div>{when.toISOString().slice(11, 16)} UTC</div>
         <div className="text-muted">{when.toISOString().slice(5, 10).replace("-", "/")}</div>
@@ -47,8 +56,10 @@ function Line({ d }: { d: Row }) {
           {d.action === "SELL" && d.impactBps != null ? `, ${pct(d.impactBps)} impact` : ""}
           <span className="text-muted">, {tokens(d.remainingBefore)} left before</span>
         </p>
-        <p className="mt-1 text-base leading-[1.5]">&ldquo;{d.reason}&rdquo;</p>
-        <p className="mt-1 text-sm text-muted">Decided by: {BY[d.source] ?? d.source}</p>
+        <p className="mt-2 text-base leading-[1.5]">
+          <span className="text-muted">{REASON_LABEL[d.source] ?? "Note"}: </span>&ldquo;{d.reason}&rdquo;
+        </p>
+        <p className="mt-1 text-sm text-muted">{BY[d.source] ?? d.source}</p>
       </div>
       <div className="font-mono text-sm md:text-right">
         {d.txHash ? (

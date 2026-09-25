@@ -24,8 +24,11 @@ export function LiveHeader({ s }: { s: TokenState }) {
           <h1 id="live-title" className="mt-4 font-display text-[44px] leading-[1.05] md:text-[64px]">
             The team&apos;s sell cap
           </h1>
-          <p className="mt-4 max-w-[640px] text-lg leading-[1.6] text-muted">
-            Everything on this page is read from Base right now: how much the team account may sell today, what the agent did, and every token that left the account.
+          <p className="mt-4 max-w-[680px] text-lg leading-[1.6] text-muted">
+            The cap, the sales and every transfer are read from Base. The agent&apos;s reasons are its own explanation, saved with each move.
+          </p>
+          <p className="mt-5 max-w-[680px] rounded-[16px] bg-butter px-5 py-3 text-base leading-[1.5]">
+            This runs on a test token Sellvane deployed on Base mainnet. The pool is small on purpose, and every transaction is real.
           </p>
         </div>
         <p className="font-mono text-sm text-muted" aria-live="polite">
