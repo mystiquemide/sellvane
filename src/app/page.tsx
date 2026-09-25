@@ -1,6 +1,7 @@
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/landing/Hero";
 import { LiveStrip } from "@/components/landing/LiveStrip";
+import { HowItWorks } from "@/components/landing/HowItWorks";
 
 export default function Home() {
   return (
@@ -9,6 +10,7 @@ export default function Home() {
       <main>
         <Hero />
         <LiveStrip />
+        <HowItWorks />
       </main>
     </div>
   );
