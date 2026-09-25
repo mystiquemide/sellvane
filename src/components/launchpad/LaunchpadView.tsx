@@ -1,10 +1,12 @@
 "use client";
 
 import { useToken } from "@/lib/useToken";
+import { TokensTable } from "./TokensTable";
 
 export function LaunchpadView() {
   const s = useToken();
   return (
+    <>
     <section aria-labelledby="lp-title" className="mx-auto max-w-[1200px] px-4 pb-10 pt-12 md:px-6 md:pt-16">
       <p className="font-eyebrow text-sm uppercase tracking-[0.08em]">For launchpads</p>
       <h1 id="lp-title" className="mt-4 max-w-[1100px] font-display text-[44px] leading-[1.05] md:text-[64px]">
@@ -21,5 +23,7 @@ export function LaunchpadView() {
             : "Base did not answer"}
       </p>
     </section>
+    <TokensTable s={s} />
+    </>
   );
 }
