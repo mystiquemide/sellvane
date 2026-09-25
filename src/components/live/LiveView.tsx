@@ -22,7 +22,7 @@ export function LiveView({ slug }: { slug: string }) {
           Nothing limits how much its team can sell through Sellvane. If you are on the team, you can set a cap in three steps.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/start" className="rounded-full bg-marigold px-8 py-4 text-base font-medium text-ink hover:bg-marigold-deep">
+          <Link href={`/start?token=${slug}`} className="rounded-full bg-marigold px-8 py-4 text-base font-medium text-ink hover:bg-marigold-deep">
             Cap a token →
           </Link>
         </div>
