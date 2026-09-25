@@ -8,7 +8,7 @@ const LINKS = [
 ];
 
 /** "overlay" sits on top of a full-bleed hero photo: transparent, white text. */
-export function Nav({ variant = "solid" }: { variant?: "solid" | "overlay" }) {
+export function Nav({ variant = "solid", cta }: { variant?: "solid" | "overlay"; cta?: React.ReactNode }) {
   const overlay = variant === "overlay";
   const text = overlay ? "text-white" : "text-ink";
   return (
@@ -29,12 +29,14 @@ export function Nav({ variant = "solid" }: { variant?: "solid" | "overlay" }) {
         </ul>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/live"
-            className="rounded-full bg-marigold px-5 py-2.5 text-base font-medium text-ink transition-colors hover:bg-marigold-deep md:px-6"
-          >
-            See it live
-          </Link>
+          {cta ?? (
+            <Link
+              href="/live"
+              className="rounded-full bg-marigold px-5 py-2.5 text-base font-medium text-ink transition-colors hover:bg-marigold-deep md:px-6"
+            >
+              See it live
+            </Link>
+          )}
 
           {/* Mobile menu: native details element, works without JavaScript. */}
           <details className="relative md:hidden">
