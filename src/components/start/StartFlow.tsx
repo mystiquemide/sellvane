@@ -302,19 +302,35 @@ function SignStep({ c, limits, seller, onDone }: { c: Checked; limits: Limits; s
   const [busy, setBusy] = useState<"connect" | "sign" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const provider = async (): Promise<Provider> => {
-    if (providerRef.current) return providerRef.current;
-    const { createBaseAccountSDK } = await import("@base-org/account/browser");
-    const sdk = createBaseAccountSDK({ appName: "Sellvane", appLogoUrl: `${window.location.origin}/icon.svg`, appChainIds: [8453] });
-    providerRef.current = sdk.getProvider() as unknown as Provider;
-    return providerRef.current;
-  };
+  // Browsers only allow the wallet window if it opens straight from the click. So the SDK and the
+  // signing helper load as soon as this step shows, and the click handlers call them without any
+  // await before the wallet request.
+  const requestRef = useRef<typeof import("@base-org/account/spend-permission/browser").requestSpendPermission | null>(null);
+  const [sdkReady, setSdkReady] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    Promise.all([import("@base-org/account/browser"), import("@base-org/account/spend-permission/browser")])
+      .then(([{ createBaseAccountSDK }, sp]) => {
+        if (!alive) return;
+        const sdk = createBaseAccountSDK({ appName: "Sellvane", appLogoUrl: `${window.location.origin}/icon.svg`, appChainIds: [8453] });
+        providerRef.current = sdk.getProvider() as unknown as Provider;
+        requestRef.current = sp.requestSpendPermission;
+        setSdkReady(true);
+      })
+      .catch(() => {
+        if (alive) setError("The wallet connector did not load. Check your connection and reload the page.");
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const connect = async () => {
+    const p = providerRef.current;
+    if (!p) return;
     setError(null);
     setBusy("connect");
     try {
-      const p = await provider();
       const accounts = (await p.request({ method: "eth_requestAccounts" })) as string[];
       if ((await p.request({ method: "eth_chainId" })) !== BASE_HEX) {
         await p.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_HEX }] });
@@ -336,9 +352,10 @@ function SignStep({ c, limits, seller, onDone }: { c: Checked; limits: Limits; s
     if (!account) return;
     setError(null);
     setBusy("sign");
+    const p = providerRef.current;
+    const requestSpendPermission = requestRef.current;
+    if (!p || !requestSpendPermission) return;
     try {
-      const p = await provider();
-      const { requestSpendPermission } = await import("@base-org/account/spend-permission/browser");
       const signed = (await requestSpendPermission({
         provider: p as never,
         account,
@@ -374,10 +391,10 @@ function SignStep({ c, limits, seller, onDone }: { c: Checked; limits: Limits; s
           <button
             type="button"
             onClick={connect}
-            disabled={busy !== null}
+            disabled={busy !== null || !sdkReady}
             className="mt-5 rounded-full bg-marigold px-8 py-4 text-base font-medium text-ink hover:bg-marigold-deep disabled:cursor-wait"
           >
-            {busy === "connect" ? "Opening your wallet..." : "Connect Base Account"}
+            {!sdkReady ? "Loading wallet connector..." : busy === "connect" ? "Opening your wallet..." : "Connect Base Account"}
           </button>
         </>
       ) : (
