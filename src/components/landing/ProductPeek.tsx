@@ -7,13 +7,13 @@ import { useToken } from "@/lib/useToken";
 const STAMP: Record<string, string> = { SELL: "Sold", WAIT: "Waited", SKIP: "Paused", BLOCKED: "Blocked" };
 
 /** Real, live excerpt of the /live page: the latest agent moves and the bypass status. */
-export function ProductPeek() {
-  const s = useToken();
+export function ProductPeek({ slug }: { slug: string }) {
+  const s = useToken(slug);
   return (
     <div className="rounded-[20px] bg-card p-5 md:p-6" aria-label="Latest moves from the live page">
       <div className="flex items-baseline justify-between gap-3">
         <p className="font-eyebrow text-xs uppercase tracking-[0.08em]">From the live page</p>
-        <Link href="/live#agent" className="text-sm font-medium underline-offset-4 hover:underline">
+        <Link href={`/live/${slug}#agent`} className="text-sm font-medium underline-offset-4 hover:underline">
           See all →
         </Link>
       </div>
@@ -34,7 +34,7 @@ export function ProductPeek() {
                   <span className={`rounded-full px-2 py-0.5 text-[11px] uppercase tracking-[0.06em] ${d.action === "SELL" ? "bg-marigold text-ink" : d.action === "BLOCKED" ? "bg-white text-ink" : "border border-ink"}`}>
                     {STAMP[d.action] ?? d.action}
                   </span>
-                  <span className="flex-1 truncate">{d.amountIn ? `${tokens(d.amountIn)} tokens` : "no sale"}</span>
+                  <span className="flex-1 truncate">{d.amountIn ? `${tokens(d.amountIn, s.data.token.decimals)} tokens` : "no sale"}</span>
                   {d.txHash ? (
                     <a href={basescanTx(d.txHash)} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
                       tx
@@ -44,7 +44,7 @@ export function ProductPeek() {
               ))}
             </ul>
           )
-        ) : s.status === "loading" ? (
+        ) : s.status === "loading" || s.status === "notfound" ? (
           <div className="space-y-3 py-3" aria-hidden="true">
             {[0, 1, 2].map((i) => (
               <div key={i} className="h-4 rounded-full bg-ink/10" />

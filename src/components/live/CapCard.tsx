@@ -1,6 +1,6 @@
 import { TrackSkeleton, VaneTrack } from "../VaneTrack";
 import { share, tokens, until, utcTime } from "@/lib/format";
-import type { TokenState } from "@/lib/useToken";
+import type { LiveState } from "@/lib/useToken";
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -12,7 +12,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   );
 }
 
-export function CapCard({ s }: { s: TokenState }) {
+export function CapCard({ s }: { s: LiveState }) {
   return (
     <section id="cap" aria-labelledby="cap-title" className="scroll-mt-6 mx-auto max-w-[1200px] px-4 md:px-6">
       <div className="rounded-[20px] bg-card p-6 md:p-10">
@@ -55,7 +55,7 @@ export function CapCard({ s }: { s: TokenState }) {
               <>
                 <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
                   <p className="font-display text-[48px] leading-[1.01] md:text-[72px]">
-                    {tokens(cap.allowance)} <span className="text-[28px] md:text-[38px]">tokens</span>
+                    {tokens(cap.allowance, token.decimals)} <span className="text-[28px] md:text-[38px]">tokens</span>
                   </p>
                   <p className="text-base text-muted">
                     {ofSupply}% of supply, {cap.activePermissions === 1 ? "1 permission active" : `sum of ${cap.activePermissions} active permissions`}
@@ -70,8 +70,8 @@ export function CapCard({ s }: { s: TokenState }) {
 
                 {/* The three numbers that explain the headline, directly under it. */}
                 <dl className="mt-6 grid gap-6 sm:grid-cols-3">
-                  <Stat label="Already sold today" value={tokens(cap.spentThisPeriod)} />
-                  <Stat label="Still allowed today" value={tokens(cap.remaining)} />
+                  <Stat label="Already sold today" value={tokens(cap.spentThisPeriod, token.decimals)} />
+                  <Stat label="Still allowed today" value={tokens(cap.remaining, token.decimals)} />
                   <Stat
                     label="Cap resets in"
                     value={until(cap.periodEnd)}
@@ -82,7 +82,7 @@ export function CapCard({ s }: { s: TokenState }) {
                 <div className="mt-8">
                   <VaneTrack
                     filled={share(cap.spentThisPeriod, cap.allowance)}
-                    label={`${tokens(cap.spentThisPeriod)} of ${tokens(cap.allowance)} tokens sold today`}
+                    label={`${tokens(cap.spentThisPeriod, token.decimals)} of ${tokens(cap.allowance, token.decimals)} tokens sold today`}
                   />
                 </div>
               </>

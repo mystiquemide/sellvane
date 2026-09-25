@@ -34,7 +34,7 @@ const POINTS = [
   },
 ];
 
-export function Audiences() {
+export function Audiences({ slug }: { slug: string }) {
   return (
     <section aria-labelledby="audiences-title" className="bg-canvas">
       <div className="mx-auto max-w-[1200px] px-4 py-20 md:px-6 md:py-[120px]">
@@ -48,7 +48,7 @@ export function Audiences() {
               Holders get a limit they can check. Teams still get paid for their work, without crashing their own chart.
             </p>
           </div>
-          <ProductPeek />
+          <ProductPeek slug={slug} />
         </div>
 
         <ul className="mt-14 grid gap-10 sm:grid-cols-2 md:mt-16 lg:grid-cols-4 lg:gap-10">

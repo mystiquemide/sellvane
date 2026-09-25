@@ -8,14 +8,18 @@ export type TokenData = TokenSnapshot & { decisions: DecisionRow[]; agent: { max
 
 export type TokenState =
   | { status: "loading" }
+  | { status: "notfound" }
   | { status: "error"; retry: () => void }
   | { status: "ready"; data: TokenData; refreshing: boolean };
+
+/** What page sections receive: the page handles "not found" before rendering them. */
+export type LiveState = Exclude<TokenState, { status: "notfound" }>;
 
 /**
  * Live token data from the chain-backed API. Polls every 30s. On failure it shows the
  * error state and hides numbers: stale values are never kept on screen.
  */
-export function useToken(symbol = "VDEMO", pollMs = 30000): TokenState {
+export function useToken(slug: string, pollMs = 30000): TokenState {
   const [state, setState] = useState<TokenState>({ status: "loading" });
   const [nonce, setNonce] = useState(0);
   const retry = useCallback(() => {
@@ -28,7 +32,11 @@ export function useToken(symbol = "VDEMO", pollMs = 30000): TokenState {
     const load = async () => {
       setState((s) => (s.status === "ready" ? { ...s, refreshing: true } : s));
       try {
-        const res = await fetch(`/api/tokens/${symbol}`, { cache: "no-store" });
+        const res = await fetch(`/api/tokens/${slug}`, { cache: "no-store" });
+        if (res.status === 404) {
+          if (alive) setState({ status: "notfound" });
+          return;
+        }
         if (!res.ok) throw new Error(String(res.status));
         const data = (await res.json()) as TokenData;
         if (alive) setState({ status: "ready", data, refreshing: false });
@@ -42,7 +50,7 @@ export function useToken(symbol = "VDEMO", pollMs = 30000): TokenState {
       alive = false;
       clearInterval(t);
     };
-  }, [symbol, pollMs, nonce, retry]);
+  }, [slug, pollMs, nonce, retry]);
 
   return state;
 }

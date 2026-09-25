@@ -7,12 +7,12 @@ import { useToken, type TokenData } from "@/lib/useToken";
 
 const ACTION_LABEL: Record<string, string> = { SELL: "Sold", WAIT: "Waited", SKIP: "Paused", BLOCKED: "Blocked" };
 
-function LastMove({ d }: { d: TokenData["decisions"][number] | undefined }) {
+function LastMove({ d, dec }: { d: TokenData["decisions"][number] | undefined; dec: number }) {
   if (!d) return <span>No agent moves yet. It checks every 10 minutes.</span>;
   return (
     <span>
       Last agent move: <strong className="font-medium">{ACTION_LABEL[d.action] ?? d.action}</strong>
-      {d.amountIn ? ` ${tokens(d.amountIn)} tokens` : ""}
+      {d.amountIn ? ` ${tokens(d.amountIn, dec)} tokens` : ""}
       {d.impactBps != null && d.action === "SELL" ? ` at ${pct(d.impactBps)} impact` : ""}
       {d.txHash ? (
         <>
@@ -26,8 +26,9 @@ function LastMove({ d }: { d: TokenData["decisions"][number] | undefined }) {
   );
 }
 
-export function LiveStrip() {
-  const s = useToken();
+export function LiveStrip({ slug }: { slug: string }) {
+  const s = useToken(slug);
+  if (s.status === "notfound") return null;
 
   return (
     <section aria-labelledby="live-strip-title" className="relative z-10 mx-auto -mt-28 max-w-[1200px] px-4 pb-20 md:px-6 md:pb-24">
@@ -54,7 +55,7 @@ export function LiveStrip() {
               {s.status === "ready" ? (
                 <VaneTrack
                   filled={share(s.data.cap.spentThisPeriod, s.data.cap.allowance)}
-                  label={`${tokens(s.data.cap.spentThisPeriod)} of ${tokens(s.data.cap.allowance)} tokens sold today`}
+                  label={`${tokens(s.data.cap.spentThisPeriod, s.data.token.decimals)} of ${tokens(s.data.cap.allowance, s.data.token.decimals)} tokens sold today`}
                 />
               ) : (
                 <TrackSkeleton />
@@ -64,9 +65,9 @@ export function LiveStrip() {
             <dl className="mt-5 grid grid-cols-1 gap-y-2 font-mono text-[15px] sm:grid-cols-2 sm:gap-x-6 md:flex md:flex-wrap md:gap-x-10 [&_dd]:whitespace-nowrap">
               {s.status === "ready" ? (
                 <>
-                  <div><dt className="sr-only">Sold today</dt><dd><span className="text-ink">{tokens(s.data.cap.spentThisPeriod)}</span> <span className="text-muted">tokens sold</span></dd></div>
-                  <div><dt className="sr-only">Left today</dt><dd><span className="text-ink">{tokens(s.data.cap.remaining)}</span> <span className="text-muted">left</span></dd></div>
-                  <div><dt className="sr-only">Daily cap</dt><dd><span className="text-muted">cap</span> <span className="text-ink">{tokens(s.data.cap.allowance)}</span> <span className="text-muted">/ day</span></dd></div>
+                  <div><dt className="sr-only">Sold today</dt><dd><span className="text-ink">{tokens(s.data.cap.spentThisPeriod, s.data.token.decimals)}</span> <span className="text-muted">tokens sold</span></dd></div>
+                  <div><dt className="sr-only">Left today</dt><dd><span className="text-ink">{tokens(s.data.cap.remaining, s.data.token.decimals)}</span> <span className="text-muted">left</span></dd></div>
+                  <div><dt className="sr-only">Daily cap</dt><dd><span className="text-muted">cap</span> <span className="text-ink">{tokens(s.data.cap.allowance, s.data.token.decimals)}</span> <span className="text-muted">/ day</span></dd></div>
                   <div><dt className="sr-only">Resets</dt><dd><span className="text-muted">resets in</span> <span className="text-ink">{until(s.data.cap.periodEnd)}</span></dd></div>
                 </>
               ) : (
@@ -75,7 +76,7 @@ export function LiveStrip() {
             </dl>
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-dashed border-line pt-5 text-[15px]">
-              {s.status === "ready" ? <LastMove d={s.data.decisions[0]} /> : <span className="h-5 w-72 rounded-full bg-line" aria-hidden="true" />}
+              {s.status === "ready" ? <LastMove d={s.data.decisions[0]} dec={s.data.token.decimals} /> : <span className="h-5 w-72 rounded-full bg-line" aria-hidden="true" />}
               <Link href="/live" className="font-medium underline-offset-4 hover:underline">
                 See every move →
               </Link>

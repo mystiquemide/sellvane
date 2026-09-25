@@ -1,9 +1,10 @@
 import { getAddress, parseEventLogs, type Address, type Hex } from "viem";
-import { deployment, MANAGER } from "./chain/config";
+import { MANAGER } from "./chain/config";
 import { publicClient, withRetry } from "./chain/clients";
 import { ERC20_ABI, MANAGER_ABI, SELLER_ABI } from "./chain/abis";
 import { fromJson, permissionHash, readCapStatus, toJson, type SpendPermission } from "./chain/permission";
 import { sql } from "./store/db";
+import type { TokenRow } from "./registry";
 import { readPool } from "./chain/pool";
 
 // mainnet.base.org caps eth_getLogs at a 2,000 block range.
@@ -109,17 +110,17 @@ async function scanTeam(team: Address, token: Address, seller: Address, deployBl
   return { perms, moves, scannedTo };
 }
 
-/** Everything the public token page needs, read from chain. */
-export async function tokenSnapshot(p: SpendPermission) {
-  const d = deployment();
-  const fromBlock = BigInt(process.env.TOKEN_DEPLOY_BLOCK ?? "0");
+/** Everything a token's live page needs, read from chain for one registered token. */
+export async function tokenSnapshot(row: TokenRow) {
+  const seller = getAddress(process.env.SELLER_ADDRESS!);
+  const p = row.permission;
+  const fromBlock = BigInt(row.deployBlock);
   const toBlock = await publicClient.getBlockNumber();
-  const [symbol, supply, teamBalance, pool, scanned] = await Promise.all([
-    publicClient.readContract({ address: d.token, abi: ERC20_ABI, functionName: "symbol" }),
-    publicClient.readContract({ address: d.token, abi: ERC20_ABI, functionName: "totalSupply" }),
-    publicClient.readContract({ address: d.token, abi: ERC20_ABI, functionName: "balanceOf", args: [d.team] }),
-    readPool(d.pool, d.token),
-    scanTeam(d.team, d.token, d.seller, fromBlock, toBlock),
+  const [supply, teamBalance, pool, scanned] = await Promise.all([
+    publicClient.readContract({ address: row.token, abi: ERC20_ABI, functionName: "totalSupply" }),
+    publicClient.readContract({ address: row.token, abi: ERC20_ABI, functionName: "balanceOf", args: [row.teamAccount] }),
+    readPool(row.pool, row.token, row.decimals),
+    scanTeam(row.teamAccount, row.token, seller, fromBlock, toBlock),
   ]);
   const { perms, moves, scannedTo } = scanned;
   if (!perms.some((x) => permissionHash(x) === permissionHash(p))) perms.push(p);
@@ -140,14 +141,15 @@ export async function tokenSnapshot(p: SpendPermission) {
   const active = permissions.filter((x) => x.approved && !x.revoked);
   const sum = (k: "allowance" | "spentThisPeriod" | "remaining") => active.reduce((acc, x) => acc + BigInt(x[k]), BigInt(0)).toString();
   return {
+    slug: row.slug,
     readAt: new Date().toISOString(),
     block: scannedTo.toString(),
-    token: { address: d.token, symbol, totalSupply: supply.toString() },
-    team: { address: d.team, balance: teamBalance.toString() },
-    seller: d.seller,
+    token: { address: row.token, symbol: row.symbol, name: row.name, decimals: row.decimals, totalSupply: supply.toString() },
+    team: { address: row.teamAccount, balance: teamBalance.toString() },
+    seller,
     pool: {
-      address: d.pool,
-      fee: d.fee,
+      address: row.pool,
+      fee: row.poolFee,
       wethReserve: pool.wethReserve.toString(),
       tokenReserve: pool.tokenReserve.toString(),
       midWeiPerToken: pool.midWeiPerToken.toString(),

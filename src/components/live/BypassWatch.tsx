@@ -1,5 +1,5 @@
 import { basescanAddress, basescanTx, short, tokens } from "@/lib/format";
-import type { TokenData, TokenState } from "@/lib/useToken";
+import type { LiveState, TokenData } from "@/lib/useToken";
 
 type Move = TokenData["uncappedMoves"][number];
 
@@ -8,7 +8,7 @@ function totalOf(moves: Move[]) {
 }
 
 /** Pinned above the cap card whenever anything left the team account outside the cap. */
-export function BypassAlert({ s }: { s: TokenState }) {
+export function BypassAlert({ s }: { s: LiveState }) {
   if (s.status !== "ready" || s.data.uncappedMoves.length === 0) return null;
   const moves = s.data.uncappedMoves;
   return (
@@ -16,14 +16,14 @@ export function BypassAlert({ s }: { s: TokenState }) {
       <a href="#bypass" className="block rounded-[20px] bg-alert px-6 py-5 text-ink md:px-10">
         <p className="font-mono text-sm uppercase tracking-[0.06em]">Uncapped move</p>
         <p className="mt-1 text-lg font-bold">
-          {tokens(totalOf(moves))} tokens left the team account outside the cap in {moves.length} {moves.length === 1 ? "transfer" : "transfers"}. See the bypass watch.
+          {tokens(totalOf(moves), s.data.token.decimals)} tokens left the team account outside the cap in {moves.length} {moves.length === 1 ? "transfer" : "transfers"}. See the bypass watch.
         </p>
       </a>
     </div>
   );
 }
 
-export function BypassWatch({ s }: { s: TokenState }) {
+export function BypassWatch({ s }: { s: LiveState }) {
   return (
     <section id="bypass" aria-labelledby="bypass-title" className="scroll-mt-6 mx-auto mt-6 max-w-[1200px] px-4 md:px-6">
       <div className="rounded-[20px] bg-card p-6 md:p-10">
@@ -74,7 +74,7 @@ export function BypassWatch({ s }: { s: TokenState }) {
                     {uncappedMoves.map((m) => (
                       <li key={m.txHash} className="flex flex-wrap items-center justify-between gap-3 py-4 font-mono text-[15px]">
                         <span className="rounded-full bg-alert px-3 py-1 text-xs uppercase tracking-[0.06em] text-ink">Uncapped</span>
-                        <span>{tokens(m.amount)} tokens</span>
+                        <span>{tokens(m.amount, s.data.token.decimals)} tokens</span>
                         <span>
                           to{" "}
                           <a href={basescanAddress(m.to)} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">

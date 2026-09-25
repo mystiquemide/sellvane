@@ -1,5 +1,5 @@
-import { basescanAddress, short } from "@/lib/format";
-import type { TokenState } from "@/lib/useToken";
+import { basescanAddress, isTestToken, short, tokenLabel } from "@/lib/format";
+import type { LiveState } from "@/lib/useToken";
 
 function Addr({ label, address }: { label: string; address: string }) {
   return (
@@ -14,22 +14,26 @@ function Addr({ label, address }: { label: string; address: string }) {
   );
 }
 
-export function LiveHeader({ s }: { s: TokenState }) {
+export function LiveHeader({ s }: { s: LiveState }) {
   const ready = s.status === "ready" ? s.data : null;
   return (
     <section aria-labelledby="live-title" className="mx-auto max-w-[1200px] px-4 pb-10 pt-12 md:px-6 md:pt-16">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <p className="font-eyebrow text-sm uppercase tracking-[0.08em]">Live on Base</p>
+          <p className="font-eyebrow text-sm uppercase tracking-[0.08em]">
+            Live on Base{ready ? `, ${tokenLabel(ready.token)}` : ""}
+          </p>
           <h1 id="live-title" className="mt-4 font-display text-[44px] leading-[1.05] md:text-[64px]">
             The team&apos;s sell cap
           </h1>
           <p className="mt-4 max-w-[680px] text-lg leading-[1.6] text-muted">
             The cap, the sales and every transfer are read from Base. The agent&apos;s reasons are its own explanation, saved with each move.
           </p>
-          <p className="mt-5 max-w-[680px] rounded-[16px] bg-butter px-5 py-3 text-base leading-[1.5]">
-            This runs on a test token Sellvane deployed on Base mainnet. The pool is small on purpose, and every transaction is real.
-          </p>
+          {ready && isTestToken(ready.token.symbol) ? (
+            <p className="mt-5 max-w-[680px] rounded-[16px] bg-butter px-5 py-3 text-base leading-[1.5]">
+              This runs on a test token Sellvane deployed on Base mainnet. The pool is small on purpose, and every transaction is real.
+            </p>
+          ) : null}
         </div>
         <p className="max-w-[300px] font-mono text-sm text-muted md:text-right" aria-live="polite">
           {ready

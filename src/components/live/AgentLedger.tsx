@@ -1,5 +1,5 @@
 import { basescanTx, pct, tokens } from "@/lib/format";
-import type { TokenData, TokenState } from "@/lib/useToken";
+import type { LiveState, TokenData } from "@/lib/useToken";
 
 type Row = TokenData["decisions"][number];
 
@@ -36,7 +36,7 @@ function Stamp({ action }: { action: Row["action"] }) {
   return <span className={`inline-block min-w-[84px] rounded-full px-3 py-1 text-center text-xs uppercase tracking-[0.06em] ${style}`}>{STAMP[action]}</span>;
 }
 
-function Line({ d }: { d: Row }) {
+function Line({ d, dec }: { d: Row; dec: number }) {
   const when = new Date(d.at);
   const blocked = d.action === "BLOCKED";
   // The refused sale is the cleanest proof the limit holds, so it prints inverted.
@@ -52,9 +52,9 @@ function Line({ d }: { d: Row }) {
       </div>
       <div>
         <p className="font-mono text-[15px]">
-          {d.amountIn ? `${tokens(d.amountIn)} tokens` : "No sale"}
+          {d.amountIn ? `${tokens(d.amountIn, dec)} tokens` : "No sale"}
           {d.action === "SELL" && d.impactBps != null ? `, ${pct(d.impactBps)} impact` : ""}
-          <span className="text-muted">, {tokens(d.remainingBefore)} left before</span>
+          <span className="text-muted">, {tokens(d.remainingBefore, dec)} left before</span>
         </p>
         <p className="mt-2 text-base leading-[1.5]">
           <span className="text-muted">{REASON_LABEL[d.source] ?? "Note"}: </span>&ldquo;{d.reason}&rdquo;
@@ -74,7 +74,7 @@ function Line({ d }: { d: Row }) {
   );
 }
 
-export function AgentLedger({ s }: { s: TokenState }) {
+export function AgentLedger({ s }: { s: LiveState }) {
   return (
     <section id="agent" aria-labelledby="agent-title" className="scroll-mt-6 mx-auto mt-16 max-w-[1200px] px-4 md:px-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -111,7 +111,7 @@ export function AgentLedger({ s }: { s: TokenState }) {
           ) : (
             <ul>
               {s.data.decisions.map((d) => (
-                <Line key={d.id} d={d} />
+                <Line key={d.id} d={d} dec={s.data.token.decimals} />
               ))}
             </ul>
           )}

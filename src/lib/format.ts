@@ -1,9 +1,7 @@
-const E18 = BigInt(10) ** BigInt(18);
-
-/** Whole-token amount with thousands separators, from an 18-decimal integer string. */
-export function tokens(raw: string | null | undefined): string {
+/** Whole-token amount with thousands separators, from a raw integer string in the token's decimals. */
+export function tokens(raw: string | null | undefined, decimals = 18): string {
   if (!raw) return "0";
-  return (BigInt(raw) / E18).toLocaleString("en-US");
+  return (BigInt(raw) / BigInt(10) ** BigInt(decimals)).toLocaleString("en-US");
 }
 
 /** Share of `part` in `whole`, 0..1, safe for huge integers. */
@@ -34,3 +32,7 @@ export function utcTime(unixSecOrIso: number | string): string {
 export const basescanTx = (hash: string) => `https://basescan.org/tx/${hash}`;
 export const basescanAddress = (a: string) => `https://basescan.org/address/${a}`;
 export const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
+
+/** Sellvane's own test token keeps its fixed symbol off headlines (see FRONTEND-PLAN naming rule). */
+export const isTestToken = (symbol: string) => symbol === "VDEMO";
+export const tokenLabel = (t: { symbol: string; name: string }) => (isTestToken(t.symbol) ? "Sellvane test token" : `${t.name} (${t.symbol})`);

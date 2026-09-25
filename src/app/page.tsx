@@ -1,5 +1,6 @@
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { featuredSlug } from "@/lib/featured";
 import { Hero } from "@/components/landing/Hero";
 import { LiveStrip } from "@/components/landing/LiveStrip";
 import { HowItWorks } from "@/components/landing/HowItWorks";
@@ -9,15 +10,16 @@ import { ForLaunchpads } from "@/components/landing/ForLaunchpads";
 import { BuiltWith } from "@/components/landing/BuiltWith";
 
 export default function Home() {
+  const slug = featuredSlug();
   return (
     <div className="relative">
       <Nav variant="overlay" />
       <main>
         <Hero />
-        <LiveStrip />
+        <LiveStrip slug={slug} />
         <ProofBand />
         <HowItWorks />
-        <Audiences />
+        <Audiences slug={slug} />
         <ForLaunchpads />
         <BuiltWith />
       </main>

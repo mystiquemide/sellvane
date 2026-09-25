@@ -11,15 +11,16 @@ export type PoolState = {
   wethIsToken0: boolean;
   sqrtPriceX96: bigint;
   liquidity: bigint;
-  /** ETH received per 1e18 token units at the mid price, in wei. */
+  /** ETH received per whole token (10^decimals units) at the mid price, in wei. */
   midWeiPerToken: bigint;
+  decimals: number;
   wethReserve: bigint;
   tokenReserve: bigint;
 };
 
 const ERC20_BAL = [{ name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] }] as const;
 
-export async function readPool(pool: Address, token: Address): Promise<PoolState> {
+export async function readPool(pool: Address, token: Address, decimals = 18): Promise<PoolState> {
   const [slot0, liquidity, token0, wethReserve, tokenReserve] = await withRetry(() =>
     Promise.all([
       publicClient.readContract({ address: pool, abi: POOL_ABI, functionName: "slot0" }),
@@ -32,10 +33,10 @@ export async function readPool(pool: Address, token: Address): Promise<PoolState
   const sqrtPriceX96 = slot0[0];
   const wethIsToken0 = getAddress(token0) === getAddress(WETH);
   const p = sqrtPriceX96 * sqrtPriceX96; // price(token1 per token0) * 2^192
-  const one = BigInt(10) ** BigInt(18);
+  const one = BigInt(10) ** BigInt(decimals);
   // WETH per token: if WETH is token0, price = token/WETH, so invert.
   const midWeiPerToken = wethIsToken0 ? (one * Q192) / p : (one * p) / Q192;
-  return { pool, wethIsToken0, sqrtPriceX96, liquidity, midWeiPerToken, wethReserve, tokenReserve };
+  return { pool, wethIsToken0, sqrtPriceX96, liquidity, midWeiPerToken, wethReserve, tokenReserve, decimals };
 }
 
 export type Quote = {
@@ -56,7 +57,7 @@ export async function quoteSell(token: Address, fee: number, amountIn: bigint, s
     }),
   );
   const ethOut = result[0];
-  const one = BigInt(10) ** BigInt(18);
+  const one = BigInt(10) ** BigInt(state.decimals);
   const ideal = (amountIn * state.midWeiPerToken) / one;
   const idealAfterFee = (ideal * (BigInt(1_000_000) - BigInt(fee))) / BigInt(1_000_000);
   const impactBps = idealAfterFee === BigInt(0) ? 10000 : Number(((idealAfterFee - ethOut) * BPS) / idealAfterFee);

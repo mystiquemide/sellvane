@@ -1,11 +1,11 @@
 import { basescanAddress } from "@/lib/format";
 import { CopyValue } from "../CopyValue";
-import type { TokenState } from "@/lib/useToken";
+import type { LiveState } from "@/lib/useToken";
 
 const MANAGER = "0xf85210B21cC50302F477BA56686d2019dC9b67Ad";
 const SELLER_SOURCE = "https://github.com/mystiquemide/sellvane/blob/main/contracts/src/SellvaneSeller.sol";
 
-export function CheckYourself({ s }: { s: TokenState }) {
+export function CheckYourself({ s }: { s: LiveState }) {
   const d = s.status === "ready" ? s.data : null;
   const steps = [
     {

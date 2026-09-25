@@ -1,5 +1,5 @@
 import { basescanAddress, pct, tokens, utcTime } from "@/lib/format";
-import type { TokenState } from "@/lib/useToken";
+import type { LiveState } from "@/lib/useToken";
 
 /** ETH with enough significant digits to be readable at very small values. */
 function eth(wei: bigint): string {
@@ -21,7 +21,7 @@ function Stat({ label, value, sub }: { label: string; value: React.ReactNode; su
   );
 }
 
-export function PoolStats({ s }: { s: TokenState }) {
+export function PoolStats({ s }: { s: LiveState }) {
   return (
     <section aria-labelledby="pool-title" className="mx-auto mt-6 max-w-[1200px] px-4 md:px-6">
       <div className="rounded-[20px] bg-card p-6 md:p-10">
@@ -44,13 +44,13 @@ export function PoolStats({ s }: { s: TokenState }) {
           </div>
         ) : (
           (() => {
-            const { pool, agent, decisions } = s.data;
+            const { pool, agent, decisions, token } = s.data;
             // midWeiPerToken is wei per whole token.
             const per1M = BigInt(pool.midWeiPerToken) * BigInt(1_000_000);
             const last = decisions[0];
             return (
               <dl className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <Stat label="Tokens in the pool" value={tokens(pool.tokenReserve)} />
+                <Stat label="Tokens in the pool" value={tokens(pool.tokenReserve, token.decimals)} />
                 <Stat label="ETH in the pool" value={eth(BigInt(pool.wethReserve))} />
                 <Stat label="Price per 1,000,000 tokens" value={`${eth(per1M)} ETH`} sub={`Uniswap v3, ${pool.fee / 10000}% fee tier`} />
                 <Stat
