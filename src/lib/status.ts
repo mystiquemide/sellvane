@@ -103,7 +103,10 @@ async function scanTeam(team: Address, token: Address, seller: Address, deployBl
       insert into scan_cache (key, to_block, payload) values (${key}, ${toBlock.toString()}, ${sql().json(payload)})
       on conflict (key) do update set to_block = excluded.to_block, payload = excluded.payload, updated_at = now()`;
   }
-  return { perms, moves };
+  // Report the furthest block actually scanned. It can be a few blocks past `toBlock` when an
+  // earlier request read from an RPC node that was slightly ahead.
+  const scannedTo = row && BigInt(row.to_block) > toBlock ? BigInt(row.to_block) : toBlock;
+  return { perms, moves, scannedTo };
 }
 
 /** Everything the public token page needs, read from chain. */
@@ -118,7 +121,7 @@ export async function tokenSnapshot(p: SpendPermission) {
     readPool(d.pool, d.token),
     scanTeam(d.team, d.token, d.seller, fromBlock, toBlock),
   ]);
-  const { perms, moves } = scanned;
+  const { perms, moves, scannedTo } = scanned;
   if (!perms.some((x) => permissionHash(x) === permissionHash(p))) perms.push(p);
   const permissions: PermissionView[] = await Promise.all(
     perms.map(async (x) => {
@@ -138,7 +141,7 @@ export async function tokenSnapshot(p: SpendPermission) {
   const sum = (k: "allowance" | "spentThisPeriod" | "remaining") => active.reduce((acc, x) => acc + BigInt(x[k]), BigInt(0)).toString();
   return {
     readAt: new Date().toISOString(),
-    block: toBlock.toString(),
+    block: scannedTo.toString(),
     token: { address: d.token, symbol, totalSupply: supply.toString() },
     team: { address: d.team, balance: teamBalance.toString() },
     seller: d.seller,
@@ -158,7 +161,7 @@ export async function tokenSnapshot(p: SpendPermission) {
     },
     permissions,
     // Block range the bypass check covered, so a zero has a stated scope.
-    scan: { fromBlock: fromBlock.toString(), toBlock: toBlock.toString() },
+    scan: { fromBlock: fromBlock.toString(), toBlock: scannedTo.toString() },
     uncappedMoves: moves.filter((m) => !m.capped),
     cappedMoves: moves.filter((m) => m.capped).length,
     sellvanePermission: permissionHash(p),

@@ -63,8 +63,8 @@ export function BypassWatch({ s }: { s: TokenState }) {
                 </dl>
 
                 <p className="mt-6 font-mono text-sm text-muted">
-                  Checked every transfer from block {Number(s.data.scan.fromBlock).toLocaleString("en-US")} (token created) to block{" "}
-                  {Number(s.data.scan.toBlock).toLocaleString("en-US")}.
+                  Checked every transfer from block {Number(s.data.scan.fromBlock).toLocaleString("en-US")} (token created) through block{" "}
+                  {Number(s.data.scan.toBlock).toLocaleString("en-US")}, in the same snapshot as the rest of this page.
                 </p>
 
                 {uncappedMoves.length === 0 ? (

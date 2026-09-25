@@ -81,10 +81,10 @@ export function AgentLedger({ s }: { s: TokenState }) {
         <div>
           <p className="font-eyebrow text-sm uppercase tracking-[0.08em]">Agent moves</p>
           <h2 id="agent-title" className="mt-4 font-display text-[38px] leading-[1.1] md:text-[54px] md:leading-[1.05]">
-            Every sale, every wait.
+            Every move, with its reason.
           </h2>
         </div>
-        <p className="max-w-[420px] text-base text-muted">Newest first. Each line shows why the agent acted and links to the transaction on Base.</p>
+        <p className="max-w-[420px] text-base text-muted">Newest first. Sales, waits and refused attempts all appear here, each with its reason and a link to the transaction on Base.</p>
       </div>
 
       <div className="mt-10">

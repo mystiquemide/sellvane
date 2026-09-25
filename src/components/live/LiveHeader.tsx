@@ -31,9 +31,9 @@ export function LiveHeader({ s }: { s: TokenState }) {
             This runs on a test token Sellvane deployed on Base mainnet. The pool is small on purpose, and every transaction is real.
           </p>
         </div>
-        <p className="font-mono text-sm text-muted" aria-live="polite">
+        <p className="max-w-[300px] font-mono text-sm text-muted md:text-right" aria-live="polite">
           {ready
-            ? `updated ${ready.readAt.slice(11, 19)} UTC, block ${Number(ready.block).toLocaleString("en-US")}`
+            ? `Snapshot at block ${Number(ready.block).toLocaleString("en-US")}, read ${ready.readAt.slice(11, 19)} UTC. Every section uses it. Refreshes every 30s.`
             : s.status === "loading"
               ? "reading Base..."
               : "Base did not answer"}
