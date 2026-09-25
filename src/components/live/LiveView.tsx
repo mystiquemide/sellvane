@@ -6,6 +6,7 @@ import { CapCard } from "./CapCard";
 import { BypassAlert, BypassWatch } from "./BypassWatch";
 import { PoolStats } from "./PoolStats";
 import { AgentLedger } from "./AgentLedger";
+import { CheckYourself } from "./CheckYourself";
 
 /** One data source for every section on /live, so all numbers come from the same chain read. */
 export function LiveView() {
@@ -18,6 +19,7 @@ export function LiveView() {
       <BypassWatch s={s} />
       <PoolStats s={s} />
       <AgentLedger s={s} />
+      <CheckYourself s={s} />
     </>
   );
 }
