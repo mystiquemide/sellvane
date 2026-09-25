@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- cap line -->
+  <rect x="88" y="356" width="336" height="30" rx="15" fill="#000"/>
+  <!-- post -->
+  <rect x="241" y="214" width="30" height="142" fill="#000"/>
+  <!-- shaft -->
+  <rect x="150" y="170" width="226" height="30" fill="#000"/>
+  <!-- arrowhead -->
+  <polygon points="366,124 446,185 366,246" fill="#000"/>
+  <!-- tail vane -->
+  <polygon points="72,124 172,124 196,185 172,246 72,246 104,185" fill="#000"/>
+</svg>
