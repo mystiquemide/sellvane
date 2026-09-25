@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isAddress } from "viem";
 import { basescanAddress, short, tokenLabel, tokens } from "@/lib/format";
+import { CopyValue } from "../CopyValue";
 
 export type Checked = {
   token: string;
@@ -401,11 +402,11 @@ function SignStep({ c, limits, seller, onDone }: { c: Checked; limits: Limits; s
         <>
           <dl className="grid gap-6 sm:grid-cols-3">
             {[
-              ["Team account", short(account)],
+              ["Team account", <CopyValue key="a" value={account} label="team account address" />],
               ["Holds", balance === null ? "..." : `${tokens(balance.toString(), c.decimals)} ${c.symbol}`],
               ["Daily cap you are signing", `${tokens(limits.capRaw.toString(), c.decimals)} ${c.symbol}`],
             ].map(([k, v]) => (
-              <div key={k} className="border-t border-dashed border-line pt-4">
+              <div key={String(k)} className="border-t border-dashed border-line pt-4">
                 <dt className="text-sm text-muted">{k}</dt>
                 <dd className="mt-1 font-mono text-lg">{v}</dd>
               </div>
