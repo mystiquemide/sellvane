@@ -23,7 +23,7 @@ export function ShareButton() {
     <button
       type="button"
       onClick={share}
-      className="rounded-full bg-marigold px-5 py-2.5 text-base font-medium text-ink transition-colors hover:bg-marigold-deep md:px-6"
+      className="whitespace-nowrap rounded-full bg-marigold px-5 py-2.5 text-base font-medium text-ink transition-colors hover:bg-marigold-deep md:px-6"
       aria-live="polite"
     >
       {copied ? (

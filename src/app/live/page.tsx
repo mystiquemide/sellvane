@@ -11,7 +11,16 @@ export const metadata: Metadata = {
 export default function LivePage() {
   return (
     <>
-      <Nav cta={<ShareButton />} />
+      <Nav
+        back
+        cta={<ShareButton />}
+        links={[
+          { href: "#cap", label: "Today's cap" },
+          { href: "#bypass", label: "Bypass watch" },
+          { href: "#agent", label: "Agent moves" },
+          { href: "#verify", label: "Check it yourself" },
+        ]}
+      />
       <main>
         <LiveView />
       </main>
