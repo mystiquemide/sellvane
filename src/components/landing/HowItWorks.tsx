@@ -33,7 +33,7 @@ const STEPS = [
   {
     icon: <CheckIcon />,
     title: "Everyone can check",
-    body: "Every sale, every wait and every blocked attempt is public, with a link to the transaction on Base.",
+    body: "Every sale, every wait and every blocked attempt is public, with a transaction link on Base where one exists.",
   },
 ];
 

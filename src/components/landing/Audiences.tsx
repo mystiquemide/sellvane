@@ -1,6 +1,4 @@
-import Image from "next/image";
-import holderStreet from "../../../public/images/holder-street.jpg";
-import holderDesk from "../../../public/images/holder-desk.jpg";
+import { ProductPeek } from "./ProductPeek";
 
 const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinecap: "round", strokeLinejoin: "round" } as const;
 const Icon = ({ d }: { d: string }) => (
@@ -50,16 +48,7 @@ export function Audiences() {
               Holders get a limit they can check. Teams still get paid for their work, without crashing their own chart.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              [holderStreet, "A man sitting on a street step, checking his phone"] as const,
-              [holderDesk, "Hands holding a phone over a wooden desk"] as const,
-            ].map(([src, alt]) => (
-              <div key={alt} className="relative aspect-[3/4] overflow-hidden">
-                <Image src={src} alt={alt} fill placeholder="blur" sizes="(min-width: 768px) 300px, 50vw" className="object-cover" />
-              </div>
-            ))}
-          </div>
+          <ProductPeek />
         </div>
 
         <ul className="mt-14 grid gap-10 sm:grid-cols-2 md:mt-16 lg:grid-cols-4 lg:gap-10">
