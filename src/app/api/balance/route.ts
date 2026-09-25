@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/lib/server/rateLimit";
 import { getAddress, isAddress } from "viem";
 import { tokenBalance } from "@/lib/chain/token";
 
@@ -7,6 +8,8 @@ export const dynamic = "force-dynamic";
 
 /** How much of a token an account holds, read from Base. */
 export async function GET(req: Request) {
+  const limited = rateLimit(req, "balance", 30, 60000);
+  if (limited) return limited;
   const q = new URL(req.url).searchParams;
   const token = q.get("token") ?? "";
   const account = q.get("account") ?? "";

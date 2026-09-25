@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/lib/server/rateLimit";
 import { getAddress, isAddress } from "viem";
 import { quoteLadder, readPool } from "@/lib/chain/pool";
 import { computeBounds } from "@/lib/agent/bounds";
@@ -11,6 +12,8 @@ export const dynamic = "force-dynamic";
  * using the same quote ladder the agent uses.
  */
 export async function GET(req: Request) {
+  const limited = rateLimit(req, "quote", 40, 60000);
+  if (limited) return limited;
   const q = new URL(req.url).searchParams;
   const token = q.get("token") ?? "";
   const pool = q.get("pool") ?? "";

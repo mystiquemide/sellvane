@@ -35,6 +35,15 @@ export async function insertDecision(r: TickResult | (Omit<TickResult, "action" 
     on conflict (tx_hash) do nothing`;
 }
 
+/** Successful sales for a permission in the last 24 hours, and when the latest one happened. */
+export async function recentSales(permissionHash: string): Promise<{ count24h: number; lastAt: Date | null }> {
+  const [r] = await sql()`
+    select count(*)::int as n, max(at) as last
+    from decisions
+    where permission_hash = ${permissionHash} and action = 'SELL' and tx_status = 'success' and at > now() - interval '24 hours'`;
+  return { count24h: r.n as number, lastAt: r.last ? new Date(r.last as string) : null };
+}
+
 export async function listDecisions(permissionHash: string, limit = 50): Promise<DecisionRow[]> {
   const rows = await sql()`
     select id, at, action, reason, source, amount_in, eth_out, impact_bps, remaining_before, tx_hash, tx_status

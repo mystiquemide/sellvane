@@ -29,7 +29,7 @@ async function run(req: Request) {
     try {
       const r = await withTickLock(`tick:${row.slug}`, async () => {
         const t = await tick(row, { ownerPk: ownerKeyFor(row), send });
-        await insertDecision(t);
+        if (!t.quiet) await insertDecision(t);
         return t;
       });
       if (!r.ran) results.push({ slug: row.slug, skipped: "another tick is running" });

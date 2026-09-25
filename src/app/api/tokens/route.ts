@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/lib/server/rateLimit";
 import { listTokens, parsePermission, registerToken, RegistryError } from "@/lib/registry";
 
 export const runtime = "nodejs";
@@ -14,6 +15,8 @@ export async function GET() {
 
 /** Register a token after its team signed the cap. Every check runs on chain. */
 export async function POST(req: Request) {
+  const limited = rateLimit(req, "register", 5, 600000);
+  if (limited) return limited;
   try {
     const body = await req.json().catch(() => null);
     if (!body?.permission) throw new RegistryError(400, "Missing permission.");

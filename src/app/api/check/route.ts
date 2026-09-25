@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/lib/server/rateLimit";
 import { findWethPool, readTokenInfo, TokenCheckError } from "@/lib/chain/token";
 import { getToken } from "@/lib/registry";
 
@@ -7,6 +8,8 @@ export const dynamic = "force-dynamic";
 
 /** Step 1 of /start: is this a Base ERC-20 with a Uniswap v3 WETH pool, and is it already capped? */
 export async function GET(req: Request) {
+  const limited = rateLimit(req, "check", 20, 60000);
+  if (limited) return limited;
   const token = new URL(req.url).searchParams.get("token") ?? "";
   try {
     const info = await readTokenInfo(token);

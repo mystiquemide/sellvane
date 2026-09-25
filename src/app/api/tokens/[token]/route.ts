@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/lib/server/rateLimit";
 import { tokenSnapshot } from "@/lib/status";
 import { listDecisions } from "@/lib/store/db";
 import { getToken } from "@/lib/registry";
@@ -11,7 +12,9 @@ const cache = new Map<string, { at: number; body: unknown }>();
 const TTL_MS = 15_000;
 
 /** Live snapshot for one registered token, looked up by token or team account address. */
-export async function GET(_req: Request, ctx: { params: Promise<{ token: string }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ token: string }> }) {
+  const limited = rateLimit(req, "snapshot", 120, 60_000);
+  if (limited) return limited;
   const { token } = await ctx.params;
   try {
     const row = await getToken(token);

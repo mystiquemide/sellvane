@@ -5,6 +5,7 @@ import { permissionHash, readCapStatus, signPermission } from "../chain/permissi
 import type { TokenRow } from "../registry";
 import { quoteLadder, quoteSell, readPool } from "../chain/pool";
 import { computeBounds, priceFloor, sliceAmount } from "./bounds";
+import { recentSales } from "../store/db";
 import { decide, type Choice, type Facts } from "./decide";
 
 export type TickResult = {
@@ -20,6 +21,16 @@ export type TickResult = {
   txHash: Hex | null;
   txStatus: "success" | "reverted" | null;
   facts: Facts | null;
+  /** Rate-limit skips are not written to the public ledger: they would flood it every tick. */
+  quiet?: boolean;
+};
+
+/** Agent rate limits, overridable by env. */
+export const LIMITS = {
+  cooldownMin: Number(process.env.SELL_COOLDOWN_MIN ?? 30),
+  maxSellsPerDay: Number(process.env.MAX_SELLS_PER_DAY ?? 12),
+  // Stop sending when the operator wallet cannot safely pay for another sale.
+  gasFloorWei: BigInt(process.env.OPERATOR_GAS_FLOOR_WEI ?? "3000000000000"),
 };
 
 const fmtWith = (decimals: number) => (v: bigint) => Number(formatUnits(v, decimals)).toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -69,6 +80,16 @@ export async function tick(row: TokenRow, opts: { ownerPk?: Hex; slippageBps?: n
     : row.signature ?? (opts.ownerPk ? await signPermission(p, opts.ownerPk) : ("0x" as Hex));
   if (!cap.approved && sig === "0x") {
     return { ...base, action: "SKIP", reason: "Permission is not approved on chain and no team signature is on file.", source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null };
+  }
+
+  // Rate limits: space sales out and cap how many happen per day, per token.
+  const sales = await recentSales(hash);
+  if (sales.lastAt && Date.now() - sales.lastAt.getTime() < LIMITS.cooldownMin * 60_000) {
+    const mins = Math.ceil((LIMITS.cooldownMin * 60_000 - (Date.now() - sales.lastAt.getTime())) / 60_000);
+    return { ...base, action: "SKIP", reason: `Cooling down: the last sale was under ${LIMITS.cooldownMin} minutes ago. Next check in about ${mins} min.`, source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null, quiet: true };
+  }
+  if (sales.count24h >= LIMITS.maxSellsPerDay) {
+    return { ...base, action: "SKIP", reason: `Reached ${LIMITS.maxSellsPerDay} sales in 24 hours.`, source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null, quiet: true };
   }
 
   const state = await readPool(d.pool, d.token, row.decimals);
@@ -121,6 +142,10 @@ export async function tick(row: TokenRow, opts: { ownerPk?: Hex; slippageBps?: n
   const sellBase = { ...base, action: "SELL" as const, reason: choice.reason, source: choice.source, amountIn: amount.toString(), ethOut: q.ethOut.toString(), impactBps: q.impactBps, facts };
   if (!opts.send) return sellBase;
 
+  const gas = await publicClient.getBalance({ address: wc.account.address });
+  if (gas < LIMITS.gasFloorWei) {
+    return { ...sellBase, action: "SKIP" as const, reason: "The agent's gas wallet is below its safety floor, so it did not send. Sales resume when it is topped up.", source: "rule" as const, amountIn: null, ethOut: null, impactBps: null, quiet: true };
+  }
   const txHash = await wc.writeContract({ address: d.seller, abi: SELLER_ABI, functionName: "sell", args });
   const r = await publicClient.waitForTransactionReceipt({ hash: txHash });
   const sold = r.status === "success" ? parseEventLogs({ abi: SELLER_ABI, logs: r.logs, eventName: "Sold" })[0] : undefined;
