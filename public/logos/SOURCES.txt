@@ -1,0 +1,5 @@
+base.svg      github.com/base/brand-kit  logo/Logotype/Digital/Base_lockup_black.svg
+uniswap.svg   github.com/Uniswap/brand-assets  Uniswap Brand Assets/Uniswap_horizontallogo_black.svg
+coinbase.svg  simple-icons (CC0 collection of official brand marks), viewBox cropped to the wordmark
+groq.svg      logo served inline on groq.com homepage (2026-09-25), fill set to black
+Used to show what Sellvane is built with. No partnership or endorsement is implied.
