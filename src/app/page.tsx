@@ -1,5 +1,6 @@
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/landing/Hero";
+import { LiveStrip } from "@/components/landing/LiveStrip";
 
 export default function Home() {
   return (
@@ -7,6 +8,7 @@ export default function Home() {
       <Nav variant="overlay" />
       <main>
         <Hero />
+        <LiveStrip />
       </main>
     </div>
   );
