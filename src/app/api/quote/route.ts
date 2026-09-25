@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/lib/server/rateLimit";
 import { getAddress, isAddress } from "viem";
-import { quoteLadder, readPool } from "@/lib/chain/pool";
-import { computeBounds } from "@/lib/agent/bounds";
+import { previewMaxSale } from "@/lib/preview";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,15 +23,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Bad parameters." }, { status: 400 });
   }
   try {
-    const state = await readPool(getAddress(pool), getAddress(token), decimals);
-    // Ladder up to a fifth of the tokens in the pool: past that, impact is far over any sane limit.
-    const max = state.tokenReserve / BigInt(5);
-    const ladder = await quoteLadder(getAddress(token), fee, max, state, 12);
-    const b = computeBounds(ladder, max, impactBps);
+    const p = await previewMaxSale(getAddress(token), getAddress(pool), fee, decimals, impactBps);
     return NextResponse.json({
       impactBps,
-      maxSale: b.maxSlice ? { amountIn: b.maxSlice.amountIn.toString(), ethOut: b.maxSlice.ethOut.toString(), impactBps: b.maxSlice.impactBps } : null,
-      smallest: b.smallest ? { amountIn: b.smallest.amountIn.toString(), impactBps: b.smallest.impactBps } : null,
+      maxSale: p.maxSale ? { amountIn: p.maxSale.amountIn.toString(), ethOut: p.maxSale.ethOut.toString(), impactBps: p.maxSale.impactBps } : null,
+      smallest: p.smallest ? { amountIn: p.smallest.amountIn.toString(), impactBps: p.smallest.impactBps } : null,
     });
   } catch {
     return NextResponse.json({ error: "Base did not answer. Try again." }, { status: 503 });
