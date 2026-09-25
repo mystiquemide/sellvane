@@ -14,9 +14,12 @@ export type Bounds = {
  * A size qualifies if it is within the remaining cap and its quoted impact is at or below
  * the team's max impact.
  */
-export function computeBounds(ladder: Quote[], remaining: bigint, maxImpactBps: number): Bounds {
-  const sorted = [...ladder].sort((a, b) => (a.amountIn < b.amountIn ? -1 : a.amountIn > b.amountIn ? 1 : 0));
-  const ok = sorted.filter((q) => q.amountIn <= remaining && q.amountIn > BigInt(0) && q.impactBps <= maxImpactBps);
+export function computeBounds(ladder: Quote[], remaining: bigint, maxImpactBps: number, minSlice: bigint = BigInt(1)): Bounds {
+  // Sizes below minSlice are not worth the gas and never count as a candidate.
+  const sorted = [...ladder]
+    .filter((q) => q.amountIn >= minSlice)
+    .sort((a, b) => (a.amountIn < b.amountIn ? -1 : a.amountIn > b.amountIn ? 1 : 0));
+  const ok = sorted.filter((q) => q.amountIn <= remaining && q.impactBps <= maxImpactBps);
   return {
     maxSlice: ok.length ? ok[ok.length - 1] : null,
     smallest: sorted[0] ?? null,

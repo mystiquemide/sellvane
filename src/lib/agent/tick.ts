@@ -47,7 +47,10 @@ async function recentSwaps(pool: Address, wethIsToken0: boolean, seller: Address
  * One agent step: read chain, compute deterministic bounds, let the model choose inside them,
  * then simulate and (if send) broadcast. Never sells above the bound or without a price floor.
  */
-export async function tick(p: SpendPermission, opts: { ownerPk: Hex; maxImpactBps: number; slippageBps?: number; send: boolean }): Promise<TickResult> {
+export async function tick(
+  p: SpendPermission,
+  opts: { ownerPk: Hex; maxImpactBps: number; slippageBps?: number; minSliceBps?: number; send: boolean },
+): Promise<TickResult> {
   const d = deployment();
   const hash = permissionHash(p);
   const cap = await readCapStatus(p);
@@ -59,8 +62,14 @@ export async function tick(p: SpendPermission, opts: { ownerPk: Hex; maxImpactBp
   }
 
   const state = await readPool(d.pool, d.token);
-  const ladder = await quoteLadder(d.token, d.fee, cap.remaining, state, 10);
-  const bounds = computeBounds(ladder, cap.remaining, opts.maxImpactBps);
+  // Minimum slice: a share of the daily cap (default 1%), never more than what remains.
+  const minSliceRaw = (p.allowance * BigInt(opts.minSliceBps ?? 100)) / BigInt(10000);
+  const minSlice = minSliceRaw < cap.remaining ? minSliceRaw : cap.remaining;
+  const ladder = await quoteLadder(d.token, d.fee, cap.remaining, state, 8);
+  if (!ladder.some((q) => q.amountIn === minSlice)) {
+    ladder.push(await quoteSell(d.token, d.fee, minSlice, state));
+  }
+  const bounds = computeBounds(ladder, cap.remaining, opts.maxImpactBps, minSlice);
   const nowSec = Math.floor(Date.now() / 1000);
   const facts: Facts = {
     symbol: "VDEMO",
@@ -89,7 +98,8 @@ export async function tick(p: SpendPermission, opts: { ownerPk: Hex; maxImpactBp
     return { ...base, action: "WAIT", reason: choice.reason, source: choice.source, amountIn: null, ethOut: null, impactBps: bounds.maxSlice.impactBps, facts };
   }
 
-  const amount = sliceAmount(bounds.maxSlice.amountIn, choice.fraction);
+  const sliced = sliceAmount(bounds.maxSlice.amountIn, choice.fraction);
+  const amount = sliced < minSlice ? minSlice : sliced;
   const q = await quoteSell(d.token, d.fee, amount, state);
   const minOut = priceFloor(q.ethOut, opts.slippageBps ?? 50);
   const sig = await signPermission(p, opts.ownerPk);

@@ -22,6 +22,14 @@ describe("computeBounds", () => {
     expect(b.smallest?.impactBps).toBe(300);
   });
 
+  it("sizes below the minimum slice never qualify", () => {
+    const b = computeBounds(ladder, BigInt(10000) * E, 100, BigInt(300) * E);
+    expect(b.maxSlice?.amountIn).toBe(BigInt(400) * E);
+    const none = computeBounds(ladder, BigInt(10000) * E, 60, BigInt(300) * E);
+    expect(none.maxSlice).toBeNull();
+    expect(none.smallest?.amountIn).toBe(BigInt(400) * E);
+  });
+
   it("ignores ladder order", () => {
     expect(computeBounds([...ladder].reverse(), BigInt(10000) * E, 100).maxSlice?.amountIn).toBe(BigInt(400) * E);
   });
