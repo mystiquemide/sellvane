@@ -15,8 +15,8 @@ export default function Home() {
       <main>
         <Hero />
         <LiveStrip />
-        <HowItWorks />
         <ProofBand />
+        <HowItWorks />
         <Audiences />
         <ForLaunchpads />
         <BuiltWith />

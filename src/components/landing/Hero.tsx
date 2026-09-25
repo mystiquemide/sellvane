@@ -24,7 +24,7 @@ export function Hero() {
         </h1>
 
         <p className="mt-6 max-w-[560px] text-lg leading-[1.5] text-white md:text-xl">
-          When a team&apos;s tokens unlock, holders can&apos;t see how much the team is allowed to sell. Sellvane puts that limit on chain, in public.
+          Sellvane is an AI agent that sells a team&apos;s unlocked tokens under a daily limit the team signs on Base. Anyone can check every sale.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-3">

@@ -23,7 +23,7 @@ const STEPS = [
   {
     icon: <SignIcon />,
     title: "The team sets a daily cap",
-    body: "Signed once from the team's Base Account. The limit lives on chain, where no one can quietly raise it.",
+    body: "Signed once from the team's Base Account. Raising it takes a new signed permission, and the live page shows every one.",
   },
   {
     icon: <VaneMark className="h-6 w-6" />,
