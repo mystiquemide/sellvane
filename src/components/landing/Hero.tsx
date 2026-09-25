@@ -34,8 +34,8 @@ export function Hero() {
           >
             See the live cap →
           </Link>
-          <Link href="#how-it-works" className="rounded-full bg-white px-8 py-4 text-base font-medium text-ink transition-colors hover:bg-butter">
-            How it works
+          <Link href="/start" className="rounded-full bg-white px-8 py-4 text-base font-medium text-ink transition-colors hover:bg-butter">
+            Cap your token
           </Link>
         </div>
       </div>

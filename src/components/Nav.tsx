@@ -7,6 +7,7 @@ const LINKS: NavLink[] = [
   { href: "/#how-it-works", label: "How it works" },
   { href: "/launchpad", label: "For launchpads" },
   { href: "/live", label: "Live cap" },
+  { href: "/start", label: "Cap your token" },
 ];
 
 /** "overlay" sits on top of a full-bleed hero photo: transparent, white text. */

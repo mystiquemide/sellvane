@@ -16,6 +16,7 @@ export default function LaunchpadPage() {
           { href: "#tokens", label: "Your tokens" },
           { href: "#require", label: "How to require it" },
           { href: "/live", label: "Live cap" },
+          { href: "/start", label: "Cap a token" },
         ]}
       />
       <main>

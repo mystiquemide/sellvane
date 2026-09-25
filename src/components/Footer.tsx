@@ -12,6 +12,7 @@ export function Footer() {
       title: "Product",
       links: [
         { label: "Live cap", href: "/live" },
+        { label: "Cap your token", href: "/start" },
         { label: "Launchpad view", href: "/launchpad" },
         { label: "How it works", href: "/#how-it-works" },
       ],
