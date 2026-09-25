@@ -10,7 +10,8 @@
     "team:create": "tsx --env-file=.env.local scripts/create-team-account.ts",
     "deploy": "tsx --env-file=.env.local scripts/deploy.ts",
     "test": "vitest run",
-    "proof": "tsx --env-file=.env.local scripts/proof-sell.ts"
+    "proof": "tsx --env-file=.env.local scripts/proof-sell.ts",
+    "tick": "tsx --env-file=.env.local scripts/tick.ts"
   },
   "dependencies": {
     "@base-org/account": "^2.5.10",
