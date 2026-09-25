@@ -84,7 +84,7 @@ export function AgentLedger({ s }: { s: TokenState }) {
             Every move, with its reason.
           </h2>
         </div>
-        <p className="max-w-[420px] text-base text-muted">Newest first. Sales, waits and refused attempts all appear here, each with its reason and a link to the transaction on Base.</p>
+        <p className="max-w-[420px] text-base text-muted">Newest first. Sales, waits and refused attempts all appear here, each with its reason and a transaction link where one exists.</p>
       </div>
 
       <div className="mt-10">
