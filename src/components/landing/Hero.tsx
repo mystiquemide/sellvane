@@ -17,10 +17,8 @@ export function Hero() {
       {/* Warm dark scrim for legibility; flat, no gradient. */}
       <div className="absolute inset-0 -z-10 bg-[rgba(28,20,0,0.5)]" aria-hidden="true" />
 
-      <div className="mx-auto flex min-h-[640px] max-w-[1200px] flex-col justify-center px-4 pb-40 pt-24 md:min-h-[720px] md:px-6">
-        <p className="font-eyebrow text-[13px] uppercase tracking-[0.08em] text-white md:text-sm">### Unlock day, handled ###</p>
-
-        <h1 className="mt-5 max-w-[760px] font-display text-[48px] leading-[1.01] tracking-[0.01em] text-white md:text-[72px]">
+      <div className="mx-auto flex min-h-[704px] max-w-[1200px] flex-col justify-center px-4 pb-40 pt-40 md:min-h-[784px] md:px-6">
+        <h1 className="max-w-[760px] font-display text-[48px] leading-[1.01] tracking-[0.01em] text-white md:text-[72px]">
           Unlocks without <br className="hidden md:block" />
           the dump.
         </h1>
@@ -42,17 +40,6 @@ export function Hero() {
         </div>
       </div>
 
-      <p className="absolute bottom-3 right-4 text-xs text-white/80 md:right-6">
-        Photo:{" "}
-        <a
-          href="https://unsplash.com/photos/black-weather-bane-zAWs-hKChYA"
-          className="underline underline-offset-2"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Nicole Wilcox on Unsplash
-        </a>
-      </p>
     </section>
   );
 }

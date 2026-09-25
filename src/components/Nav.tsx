@@ -7,18 +7,21 @@ const LINKS = [
   { href: "/t/vdemo", label: "Live token" },
 ];
 
-export function Nav() {
+/** "overlay" sits on top of a full-bleed hero photo: transparent, white text. */
+export function Nav({ variant = "solid" }: { variant?: "solid" | "overlay" }) {
+  const overlay = variant === "overlay";
+  const text = overlay ? "text-white" : "text-ink";
   return (
-    <header className="bg-canvas">
+    <header className={overlay ? "absolute inset-x-0 top-0 z-30" : "bg-canvas"}>
       <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-6" aria-label="Main">
-        <Link href="/" aria-label="Sellvane home">
+        <Link href="/" aria-label="Sellvane home" className={text}>
           <Logo />
         </Link>
 
         <ul className="hidden items-center gap-8 md:flex">
           {LINKS.map((l) => (
             <li key={l.href}>
-              <Link href={l.href} className="text-base text-ink underline-offset-4 hover:underline">
+              <Link href={l.href} className={`text-base ${text} underline-offset-4 hover:underline`}>
                 {l.label}
               </Link>
             </li>
@@ -36,7 +39,7 @@ export function Nav() {
           {/* Mobile menu: native details element, works without JavaScript. */}
           <details className="relative md:hidden">
             <summary
-              className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full bg-ink text-white [&::-webkit-details-marker]:hidden"
+              className={`flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full [&::-webkit-details-marker]:hidden ${overlay ? "bg-white text-ink" : "bg-ink text-white"}`}
               aria-label="Open menu"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
