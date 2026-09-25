@@ -11,7 +11,8 @@
     "deploy": "tsx --env-file=.env.local scripts/deploy.ts",
     "test": "vitest run",
     "proof": "tsx --env-file=.env.local scripts/proof-sell.ts",
-    "tick": "tsx --env-file=.env.local scripts/tick.ts"
+    "tick": "tsx --env-file=.env.local scripts/tick.ts",
+    "db:migrate": "tsx --env-file=.env.local scripts/db-migrate.ts"
   },
   "dependencies": {
     "@base-org/account": "^2.5.10",

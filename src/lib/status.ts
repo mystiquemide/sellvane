@@ -1,0 +1,131 @@
+import { getAddress, parseEventLogs, type Address, type Hex } from "viem";
+import { deployment, MANAGER } from "./chain/config";
+import { publicClient, withRetry } from "./chain/clients";
+import { ERC20_ABI, MANAGER_ABI, SELLER_ABI } from "./chain/abis";
+import { permissionHash, readCapStatus, type SpendPermission } from "./chain/permission";
+import { readPool } from "./chain/pool";
+
+const CHUNK = BigInt(5000);
+
+async function logsInChunks<T>(from: bigint, to: bigint, fetch: (a: bigint, b: bigint) => Promise<T[]>): Promise<T[]> {
+  const out: T[] = [];
+  for (let a = from; a <= to; a += CHUNK) {
+    const b = a + CHUNK - BigInt(1) < to ? a + CHUNK - BigInt(1) : to;
+    out.push(...(await withRetry(() => fetch(a, b))));
+  }
+  return out;
+}
+
+export type PermissionView = {
+  hash: Hex;
+  allowance: string;
+  spentThisPeriod: string;
+  remaining: string;
+  periodEnd: number;
+  revoked: boolean;
+  approved: boolean;
+};
+
+export type OutgoingMove = {
+  txHash: Hex;
+  blockNumber: string;
+  to: Address;
+  amount: string;
+  capped: boolean;
+};
+
+/**
+ * Every spend permission the team account has approved for this token (WIN-PLAN L2).
+ * Holders see the true total cap, not just the one Sellvane uses.
+ */
+export async function teamPermissions(team: Address, token: Address, fromBlock: bigint, toBlock: bigint): Promise<SpendPermission[]> {
+  const logs = await logsInChunks(fromBlock, toBlock, (a, b) =>
+    publicClient.getContractEvents({ address: MANAGER, abi: MANAGER_ABI, eventName: "SpendPermissionApproved", fromBlock: a, toBlock: b }),
+  );
+  const seen = new Map<string, SpendPermission>();
+  for (const l of logs) {
+    const sp = l.args.spendPermission;
+    if (!sp || getAddress(sp.account) !== team || getAddress(sp.token) !== token) continue;
+    const p: SpendPermission = { ...sp, period: Number(sp.period), start: Number(sp.start), end: Number(sp.end) };
+    seen.set(permissionHash(p), p);
+  }
+  return [...seen.values()];
+}
+
+/**
+ * Every token transfer out of the team account (WIN-PLAN L1). A move is "capped" only if the
+ * same transaction contains a Sold event from SellvaneSeller for this account. Anything else
+ * left outside the cap and is flagged.
+ */
+export async function outgoingMoves(team: Address, token: Address, seller: Address, fromBlock: bigint, toBlock: bigint): Promise<OutgoingMove[]> {
+  const transfers = await logsInChunks(fromBlock, toBlock, (a, b) =>
+    publicClient.getContractEvents({ address: token, abi: ERC20_ABI, eventName: "Transfer", args: { from: team }, fromBlock: a, toBlock: b }),
+  );
+  const moves: OutgoingMove[] = [];
+  for (const t of transfers) {
+    const receipt = await withRetry(() => publicClient.getTransactionReceipt({ hash: t.transactionHash }));
+    const sold = parseEventLogs({ abi: SELLER_ABI, logs: receipt.logs.filter((l) => getAddress(l.address) === seller), eventName: "Sold" });
+    const capped = sold.some((s) => getAddress(s.args.account) === team);
+    moves.push({ txHash: t.transactionHash, blockNumber: t.blockNumber.toString(), to: t.args.to!, amount: t.args.value!.toString(), capped });
+  }
+  return moves;
+}
+
+/** Everything the public token page needs, read from chain. */
+export async function tokenSnapshot(p: SpendPermission) {
+  const d = deployment();
+  const fromBlock = BigInt(process.env.TOKEN_DEPLOY_BLOCK ?? "0");
+  const toBlock = await publicClient.getBlockNumber();
+  const [symbol, supply, teamBalance, pool, perms, moves] = await Promise.all([
+    publicClient.readContract({ address: d.token, abi: ERC20_ABI, functionName: "symbol" }),
+    publicClient.readContract({ address: d.token, abi: ERC20_ABI, functionName: "totalSupply" }),
+    publicClient.readContract({ address: d.token, abi: ERC20_ABI, functionName: "balanceOf", args: [d.team] }),
+    readPool(d.pool, d.token),
+    teamPermissions(d.team, d.token, fromBlock, toBlock),
+    outgoingMoves(d.team, d.token, d.seller, fromBlock, toBlock),
+  ]);
+  if (!perms.some((x) => permissionHash(x) === permissionHash(p))) perms.push(p);
+  const permissions: PermissionView[] = await Promise.all(
+    perms.map(async (x) => {
+      const s = await readCapStatus(x);
+      return {
+        hash: permissionHash(x),
+        allowance: x.allowance.toString(),
+        spentThisPeriod: s.spentThisPeriod.toString(),
+        remaining: s.remaining.toString(),
+        periodEnd: s.periodEnd,
+        revoked: s.revoked,
+        approved: s.approved,
+      };
+    }),
+  );
+  const active = permissions.filter((x) => x.approved && !x.revoked);
+  const sum = (k: "allowance" | "spentThisPeriod" | "remaining") => active.reduce((acc, x) => acc + BigInt(x[k]), BigInt(0)).toString();
+  return {
+    readAt: new Date().toISOString(),
+    block: toBlock.toString(),
+    token: { address: d.token, symbol, totalSupply: supply.toString() },
+    team: { address: d.team, balance: teamBalance.toString() },
+    seller: d.seller,
+    pool: {
+      address: d.pool,
+      fee: d.fee,
+      wethReserve: pool.wethReserve.toString(),
+      tokenReserve: pool.tokenReserve.toString(),
+      midWeiPerToken: pool.midWeiPerToken.toString(),
+    },
+    cap: {
+      activePermissions: active.length,
+      allowance: sum("allowance"),
+      spentThisPeriod: sum("spentThisPeriod"),
+      remaining: sum("remaining"),
+      periodEnd: active.length ? Math.min(...active.map((x) => x.periodEnd)) : null,
+    },
+    permissions,
+    uncappedMoves: moves.filter((m) => !m.capped),
+    cappedMoves: moves.filter((m) => m.capped).length,
+    sellvanePermission: permissionHash(p),
+  };
+}
+
+export type TokenSnapshot = Awaited<ReturnType<typeof tokenSnapshot>>;
