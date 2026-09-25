@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Nav } from "@/components/Nav";
-import { Footer } from "@/components/Footer";
 import { ShareButton } from "@/components/live/ShareButton";
 import { LiveView } from "@/components/live/LiveView";
 
@@ -16,7 +15,6 @@ export default function LivePage() {
       <main>
         <LiveView />
       </main>
-      <Footer />
     </>
   );
 }
