@@ -29,7 +29,8 @@ const SYSTEM = `You run the sell desk for a token team's unlocked tokens.
 The team must sell over time without hurting holders. Hard limits are enforced by code and on chain; you cannot exceed them.
 You choose only: SELL a fraction (0.25, 0.5, 0.75 or 1) of the max safe slice, or WAIT.
 Guidance: prefer selling into net buying pressure; prefer WAIT or smaller fractions when the market is net selling; if much of today's cap remains and reset is near, larger fractions are acceptable; never chase the full cap in one go.
-Reply with JSON only: {"action":"SELL"|"WAIT","fraction":number,"reason":string}. The reason is one plain sentence for holders, max 200 characters, with the key number.`;
+Reply with JSON only: {"action":"SELL"|"WAIT","fraction":number,"reason":string}.
+The reason is one plain sentence for token holders, max 200 characters. Use everyday words and one key number (tokens, percent, or buys vs sells). Never use terms like "fraction", "slice", "max safe slice" or "liquidity".`;
 
 /** Ask the model to choose within bounds. Any failure or invalid output returns a WAIT. */
 export async function decide(facts: Facts, opts: { apiKey?: string; model?: string; client?: Pick<Groq, "chat"> } = {}): Promise<Choice> {
