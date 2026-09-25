@@ -9,7 +9,8 @@
     "lint": "eslint",
     "team:create": "tsx --env-file=.env.local scripts/create-team-account.ts",
     "deploy": "tsx --env-file=.env.local scripts/deploy.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "proof": "tsx --env-file=.env.local scripts/proof-sell.ts"
   },
   "dependencies": {
     "@base-org/account": "^2.5.10",
