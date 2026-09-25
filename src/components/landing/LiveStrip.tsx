@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Lookup } from "../Lookup";
 import { TrackSkeleton, VaneTrack } from "../VaneTrack";
 import { basescanTx, pct, share, tokens, until } from "@/lib/format";
 import { useToken, type TokenData } from "@/lib/useToken";
@@ -83,6 +84,13 @@ export function LiveStrip({ slug }: { slug: string }) {
             </div>
           </>
         )}
+      </div>
+
+      <div className="mt-8 grid items-end gap-6 md:grid-cols-[minmax(0,640px)_auto] md:justify-between">
+        <Lookup />
+        <Link href="/start" className="justify-self-start text-base font-medium underline underline-offset-4 md:justify-self-end md:pb-3">
+          On a token team? Cap your token →
+        </Link>
       </div>
     </section>
   );
