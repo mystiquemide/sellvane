@@ -1,8 +1,8 @@
-import { formatEther, formatUnits, parseEventLogs, type Address, type Hex } from "viem";
-import { deployment } from "../chain/config";
+import { formatEther, formatUnits, getAddress, parseEventLogs, type Address, type Hex } from "viem";
 import { operatorClient, publicClient, withRetry } from "../chain/clients";
 import { POOL_ABI, SELLER_ABI } from "../chain/abis";
-import { permissionHash, readCapStatus, signPermission, type SpendPermission } from "../chain/permission";
+import { permissionHash, readCapStatus, signPermission } from "../chain/permission";
+import type { TokenRow } from "../registry";
 import { quoteLadder, quoteSell, readPool } from "../chain/pool";
 import { computeBounds, priceFloor, sliceAmount } from "./bounds";
 import { decide, type Choice, type Facts } from "./decide";
@@ -22,10 +22,10 @@ export type TickResult = {
   facts: Facts | null;
 };
 
-const fmt = (v: bigint) => Number(formatUnits(v, 18)).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const fmtWith = (decimals: number) => (v: bigint) => Number(formatUnits(v, decimals)).toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 /** Count market buys and sells of the token in the last ~hour of blocks, excluding Sellvane's own sells. */
-async function recentSwaps(pool: Address, wethIsToken0: boolean, seller: Address) {
+async function recentSwaps(pool: Address, wethIsToken0: boolean, seller: Address, fmt: (v: bigint) => string) {
   const latest = await publicClient.getBlockNumber();
   const logs = await withRetry(() =>
     publicClient.getContractEvents({ address: pool, abi: POOL_ABI, eventName: "Swap", fromBlock: latest - BigInt(1800), toBlock: latest }),
@@ -47,11 +47,11 @@ async function recentSwaps(pool: Address, wethIsToken0: boolean, seller: Address
  * One agent step: read chain, compute deterministic bounds, let the model choose inside them,
  * then simulate and (if send) broadcast. Never sells above the bound or without a price floor.
  */
-export async function tick(
-  p: SpendPermission,
-  opts: { ownerPk: Hex; maxImpactBps: number; slippageBps?: number; minSliceBps?: number; send: boolean },
-): Promise<TickResult> {
-  const d = deployment();
+export async function tick(row: TokenRow, opts: { ownerPk?: Hex; slippageBps?: number; send: boolean }): Promise<TickResult> {
+  const p = row.permission;
+  const d = { token: row.token, pool: row.pool, fee: row.poolFee, seller: getAddress(process.env.SELLER_ADDRESS!) };
+  const fmt = fmtWith(row.decimals);
+  const maxImpactBps = row.maxImpactBps;
   const hash = permissionHash(p);
   const cap = await readCapStatus(p);
   const base = { at: new Date().toISOString(), permissionHash: hash, remainingBefore: cap.remaining.toString(), txHash: null, txStatus: null } as const;
@@ -61,28 +61,39 @@ export async function tick(
     return { ...base, action: "SKIP", reason: "Daily cap reached. No more team sells until reset.", source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null };
   }
 
-  const state = await readPool(d.pool, d.token);
+  // First sale of a permission approves it on chain with the owner's signature: the team's stored
+  // signature, or for Sellvane's own test token, a fresh one from its team key. Without either the
+  // permission can never be used, so skip before asking the model anything.
+  const sig: Hex = cap.approved
+    ? "0x"
+    : row.signature ?? (opts.ownerPk ? await signPermission(p, opts.ownerPk) : ("0x" as Hex));
+  if (!cap.approved && sig === "0x") {
+    return { ...base, action: "SKIP", reason: "Permission is not approved on chain and no team signature is on file.", source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null };
+  }
+
+  const state = await readPool(d.pool, d.token, row.decimals);
   // Minimum slice: a share of the daily cap (default 1%), never more than what remains.
-  const minSliceRaw = (p.allowance * BigInt(opts.minSliceBps ?? 100)) / BigInt(10000);
+  const minSliceRaw = (p.allowance * BigInt(row.minSliceBps)) / BigInt(10000);
   const minSlice = minSliceRaw < cap.remaining ? minSliceRaw : cap.remaining;
   const ladder = await quoteLadder(d.token, d.fee, cap.remaining, state, 8);
   if (!ladder.some((q) => q.amountIn === minSlice)) {
     ladder.push(await quoteSell(d.token, d.fee, minSlice, state));
   }
-  const bounds = computeBounds(ladder, cap.remaining, opts.maxImpactBps, minSlice);
+  const bounds = computeBounds(ladder, cap.remaining, maxImpactBps, minSlice);
   const nowSec = Math.floor(Date.now() / 1000);
   const facts: Facts = {
-    symbol: "VDEMO",
+    // The test token's fixed symbol stays out of holder-facing reasons.
+    symbol: row.symbol === "VDEMO" ? "tokens" : row.symbol,
     capPerDay: fmt(p.allowance),
     soldToday: fmt(cap.spentThisPeriod),
     remainingToday: fmt(cap.remaining),
     hoursUntilReset: Math.max(0, Math.round(((cap.periodEnd - nowSec) / 3600) * 10) / 10),
     poolTokenReserve: fmt(state.tokenReserve),
     poolEthReserve: formatEther(state.wethReserve),
-    maxImpactPct: opts.maxImpactBps / 100,
+    maxImpactPct: maxImpactBps / 100,
     maxSafeSlice: bounds.maxSlice ? fmt(bounds.maxSlice.amountIn) : "0",
     maxSafeSliceImpactPct: bounds.maxSlice ? bounds.maxSlice.impactBps / 100 : 0,
-    recentSwaps: await recentSwaps(d.pool, state.wethIsToken0, d.seller),
+    recentSwaps: await recentSwaps(d.pool, state.wethIsToken0, d.seller, fmt),
   };
 
   if (!bounds.maxSlice) {
@@ -102,7 +113,7 @@ export async function tick(
   const amount = sliced < minSlice ? minSlice : sliced;
   const q = await quoteSell(d.token, d.fee, amount, state);
   const minOut = priceFloor(q.ethOut, opts.slippageBps ?? 50);
-  const sig = await signPermission(p, opts.ownerPk);
+
   const wc = operatorClient();
   const args = [p, sig, !cap.approved, amount, minOut, d.fee] as const;
 

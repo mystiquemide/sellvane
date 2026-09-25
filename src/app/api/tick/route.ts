@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import type { Hex } from "viem";
-import { tick } from "@/lib/agent/tick";
+import { getAddress, type Hex } from "viem";
+import { tick, type TickResult } from "@/lib/agent/tick";
 import { insertDecision, withTickLock } from "@/lib/store/db";
-import { permissionHash } from "@/lib/chain/permission";
-import { servedPermission } from "@/lib/server/permission";
+import { listTokens, type TokenRow } from "@/lib/registry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,22 +14,35 @@ function authorized(req: Request) {
   return secrets.some((s) => h === `Bearer ${s}`);
 }
 
+/** Only Sellvane's own test token may be signed with a key we hold; real teams sign in their wallet. */
+function ownerKeyFor(row: TokenRow): Hex | undefined {
+  const team = process.env.TEAM_ACCOUNT_ADDRESS;
+  return team && getAddress(team) === row.teamAccount ? (process.env.TEAM_OWNER_PRIVATE_KEY as Hex) : undefined;
+}
+
 async function run(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const p = servedPermission();
-  const result = await withTickLock(`tick:${permissionHash(p)}`, async () => {
-    const r = await tick(p, {
-      ownerPk: process.env.TEAM_OWNER_PRIVATE_KEY as Hex,
-      maxImpactBps: Number(process.env.MAX_IMPACT_BPS ?? 100),
-      send: process.env.TICK_SEND !== "0",
-    });
-    await insertDecision(r);
-    return r;
-  });
-  if (!result.ran) return NextResponse.json({ skipped: "another tick is running" }, { status: 409 });
-  const { facts: _facts, ...rest } = result.value;
-  void _facts;
-  return NextResponse.json(rest);
+  const send = process.env.TICK_SEND !== "0";
+  const results: ({ slug: string } & (Omit<TickResult, "facts"> | { skipped: string } | { error: string }))[] = [];
+  // One token at a time: the operator key sends every sale, so nonces must not race.
+  for (const row of await listTokens()) {
+    try {
+      const r = await withTickLock(`tick:${row.slug}`, async () => {
+        const t = await tick(row, { ownerPk: ownerKeyFor(row), send });
+        await insertDecision(t);
+        return t;
+      });
+      if (!r.ran) results.push({ slug: row.slug, skipped: "another tick is running" });
+      else {
+        const { facts: _facts, ...rest } = r.value;
+        void _facts;
+        results.push({ slug: row.slug, ...rest });
+      }
+    } catch (e) {
+      results.push({ slug: row.slug, error: (e as Error).message.split("\n")[0] });
+    }
+  }
+  return NextResponse.json({ ticked: results.length, results });
 }
 
 export const GET = run;
