@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { TokenSnapshot } from "./status";
 import type { DecisionRow } from "./store/db";
 
-export type TokenData = TokenSnapshot & { decisions: DecisionRow[] };
+export type TokenData = TokenSnapshot & { decisions: DecisionRow[]; agent: { maxImpactBps: number } };
 
 export type TokenState =
   | { status: "loading" }

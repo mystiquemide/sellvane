@@ -13,7 +13,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ symbol: string
   try {
     const p = servedPermission();
     const [snapshot, decisions] = await Promise.all([tokenSnapshot(p), listDecisions(permissionHash(p))]);
-    return NextResponse.json({ ...snapshot, decisions }, { headers: { "cache-control": "no-store" } });
+    const agent = { maxImpactBps: Number(process.env.MAX_IMPACT_BPS ?? 100) };
+    return NextResponse.json({ ...snapshot, decisions, agent }, { headers: { "cache-control": "no-store" } });
   } catch (e) {
     // Fail closed: never show cached or guessed numbers when the chain cannot be read.
     return NextResponse.json({ error: "chain read failed", detail: (e as Error).message.split("\n")[0] }, { status: 503 });
