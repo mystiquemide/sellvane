@@ -5,6 +5,7 @@ import { HowItWorks } from "@/components/landing/HowItWorks";
 import { ProofBand } from "@/components/landing/ProofBand";
 import { Audiences } from "@/components/landing/Audiences";
 import { ForLaunchpads } from "@/components/landing/ForLaunchpads";
+import { BuiltWith } from "@/components/landing/BuiltWith";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
         <ProofBand />
         <Audiences />
         <ForLaunchpads />
+        <BuiltWith />
       </main>
     </div>
   );
