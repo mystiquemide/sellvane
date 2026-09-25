@@ -29,7 +29,7 @@ export function Hero() {
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <Link
-            href="/t/vdemo"
+            href="/live"
             className="rounded-full bg-marigold px-8 py-4 text-base font-medium text-ink transition-colors hover:bg-marigold-deep"
           >
             See the live cap →

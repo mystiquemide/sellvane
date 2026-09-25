@@ -12,7 +12,7 @@ function LastMove({ d }: { d: TokenData["decisions"][number] | undefined }) {
   return (
     <span>
       Last agent move: <strong className="font-medium">{ACTION_LABEL[d.action] ?? d.action}</strong>
-      {d.amountIn ? ` ${tokens(d.amountIn)} VDEMO` : ""}
+      {d.amountIn ? ` ${tokens(d.amountIn)} tokens` : ""}
       {d.impactBps != null && d.action === "SELL" ? ` at ${pct(d.impactBps)} impact` : ""}
       {d.txHash ? (
         <>
@@ -34,7 +34,7 @@ export function LiveStrip() {
       <div className="rounded-[20px] bg-card p-6 md:p-8">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="live-strip-title" className="font-display text-[26px] leading-[1.2]">
-            VDEMO today
+            Team sell cap, today
           </h2>
           <p className="font-mono text-sm text-muted">
             {s.status === "ready" ? `read from Base, block ${Number(s.data.block).toLocaleString("en-US")}` : s.status === "loading" ? "reading Base..." : ""}
@@ -54,7 +54,7 @@ export function LiveStrip() {
               {s.status === "ready" ? (
                 <VaneTrack
                   filled={share(s.data.cap.spentThisPeriod, s.data.cap.allowance)}
-                  label={`${tokens(s.data.cap.spentThisPeriod)} of ${tokens(s.data.cap.allowance)} VDEMO sold today`}
+                  label={`${tokens(s.data.cap.spentThisPeriod)} of ${tokens(s.data.cap.allowance)} tokens sold today`}
                 />
               ) : (
                 <TrackSkeleton />
@@ -64,7 +64,7 @@ export function LiveStrip() {
             <dl className="mt-5 grid grid-cols-1 gap-y-2 font-mono text-[15px] sm:grid-cols-2 sm:gap-x-6 md:flex md:flex-wrap md:gap-x-10 [&_dd]:whitespace-nowrap">
               {s.status === "ready" ? (
                 <>
-                  <div><dt className="sr-only">Sold today</dt><dd><span className="text-ink">{tokens(s.data.cap.spentThisPeriod)}</span> <span className="text-muted">sold</span></dd></div>
+                  <div><dt className="sr-only">Sold today</dt><dd><span className="text-ink">{tokens(s.data.cap.spentThisPeriod)}</span> <span className="text-muted">tokens sold</span></dd></div>
                   <div><dt className="sr-only">Left today</dt><dd><span className="text-ink">{tokens(s.data.cap.remaining)}</span> <span className="text-muted">left</span></dd></div>
                   <div><dt className="sr-only">Daily cap</dt><dd><span className="text-muted">cap</span> <span className="text-ink">{tokens(s.data.cap.allowance)}</span> <span className="text-muted">/ day</span></dd></div>
                   <div><dt className="sr-only">Resets</dt><dd><span className="text-muted">resets in</span> <span className="text-ink">{until(s.data.cap.periodEnd)}</span></dd></div>
@@ -76,8 +76,8 @@ export function LiveStrip() {
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-dashed border-line pt-5 text-[15px]">
               {s.status === "ready" ? <LastMove d={s.data.decisions[0]} /> : <span className="h-5 w-72 rounded-full bg-line" aria-hidden="true" />}
-              <Link href="/t/vdemo" className="font-medium underline-offset-4 hover:underline">
-                Open token page →
+              <Link href="/live" className="font-medium underline-offset-4 hover:underline">
+                See every move →
               </Link>
             </div>
           </>

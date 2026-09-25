@@ -4,7 +4,7 @@ import { Logo } from "./Logo";
 const LINKS = [
   { href: "/#how-it-works", label: "How it works" },
   { href: "/launchpad", label: "For launchpads" },
-  { href: "/t/vdemo", label: "Live token" },
+  { href: "/live", label: "Live cap" },
 ];
 
 /** "overlay" sits on top of a full-bleed hero photo: transparent, white text. */
@@ -30,7 +30,7 @@ export function Nav({ variant = "solid" }: { variant?: "solid" | "overlay" }) {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/t/vdemo"
+            href="/live"
             className="rounded-full bg-marigold px-5 py-2.5 text-base font-medium text-ink transition-colors hover:bg-marigold-deep md:px-6"
           >
             See it live
