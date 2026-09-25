@@ -10,10 +10,11 @@ export const RPC_URL = process.env.BASE_RPC_URL ?? "https://mainnet.base.org";
 /** Read RPCs, tried in order. Public endpoints rate-limit, so reads fall back across several. */
 export const READ_RPC_URLS = [
   RPC_URL,
-  "https://base-rpc.publicnode.com",
   "https://base.drpc.org",
   "https://1rpc.io/base",
   "https://base.meowrpc.com",
+  // Last: publicnode does not serve historical state, so it can answer old reads wrongly.
+  "https://base-rpc.publicnode.com",
 ].filter((u, i, a) => a.indexOf(u) === i);
 export const BASESCAN = "https://basescan.org";
 
