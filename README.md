@@ -13,8 +13,9 @@ The team signs one Coinbase spend permission: at most N tokens per 24 hours, spe
 | Try it on your token | https://sellvane.midelabs.xyz/start |
 | Telegram bot | https://t.me/sellvane_bot |
 | X | https://x.com/sellvane |
+| Demo video (2:16) | https://youtu.be/rRFIAhth9Ak |
 
-![Sellvane landing page](assets/screenshots/home.png)
+[![Watch the Sellvane demo (2:16)](assets/demo-thumbnail.jpg)](https://youtu.be/rRFIAhth9Ak)
 
 ## Try it in 60 seconds
 
@@ -35,6 +36,8 @@ Vesting contracts say when a team's tokens unlock. They say nothing about how fa
 - **Non-custodial.** Tokens stay in the team's Base Account until the moment of sale, and the ETH goes back to the same account in the same transaction. The team can revoke the permission at any time, which stops all future sales.
 
 ## Screenshots
+
+![Sellvane landing page](assets/screenshots/home.png)
 
 | Live cap, bypass watch and agent ledger | Team setup with a real token |
 |---|---|
