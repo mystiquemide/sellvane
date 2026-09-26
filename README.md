@@ -56,9 +56,9 @@ flowchart TD
     B -- yes --> Z[Skip quietly]
     B -- no --> C[Read cap, pool and reset time from Base]
     C --> D[Quote a ladder of sizes on QuoterV2]
-    D --> E{Largest slice under<br/>impact limit >= 1% of cap?}
+    D --> E{"Largest slice under<br/>impact limit at least 1% of cap?"}
     E -- no --> W[WAIT, recorded with reason]
-    E -- yes --> F[LLM picks SELL 25/50/75/100% or WAIT]
+    E -- yes --> F["LLM picks SELL 25, 50, 75 or 100% of slice, or WAIT"]
     F --> G{Valid JSON?}
     G -- no --> W
     G -- yes, WAIT --> W
