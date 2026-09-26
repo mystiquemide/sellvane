@@ -16,7 +16,7 @@ const POINTS = [
   },
   {
     who: "Holders",
-    title: "Workarounds get flagged",
+    title: "Transfers outside Sellvane get flagged",
     body: "If tokens leave the team account any way other than Sellvane, the live page shows it in red with the transaction.",
     icon: <Icon d="M12 4 3 20h18zM12 10v4M12 17h.01" />,
   },
@@ -28,8 +28,8 @@ const POINTS = [
   },
   {
     who: "Teams",
-    title: "Sell without crashing your chart",
-    body: "The agent sells in slices the pool can take, so holders see a plan instead of a dump.",
+    title: "Sell in slices the pool can take",
+    body: "Each sale stays under a price impact limit you set, and holders can see every move and the reason for it.",
     icon: <Icon d="M4 20h16M7 16V9M12 16V5M17 16v-4" />,
   },
 ];
@@ -45,7 +45,7 @@ export function Audiences({ slug }: { slug: string }) {
               Know the most the team can sell today.
             </h2>
             <p className="mt-6 max-w-[520px] text-lg leading-[1.6] text-muted">
-              Holders get a limit they can check. Teams still get paid for their work, without crashing their own chart.
+              Holders get a limit they can check. Teams still get paid for their work, one capped sale at a time.
             </p>
           </div>
           <ProductPeek slug={slug} />

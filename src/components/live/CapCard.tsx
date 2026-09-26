@@ -1,5 +1,5 @@
 import { TrackSkeleton, VaneTrack } from "../VaneTrack";
-import { share, tokens, until, utcTime } from "@/lib/format";
+import { share, tokens, tokensUp, until, utcTime } from "@/lib/format";
 import type { LiveState } from "@/lib/useToken";
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -62,6 +62,10 @@ export function CapCard({ s }: { s: LiveState }) {
                   </p>
                 </div>
 
+                <p className="mt-3 max-w-[680px] text-base text-muted">
+                  Applies to sales from this team account through Sellvane. Other transfers are flagged below, not blocked.
+                </p>
+
                 {reached ? (
                   <p className="mt-6 inline-block rounded-full bg-ink px-5 py-2 font-mono text-sm uppercase tracking-[0.06em] text-white">
                     Limit hit. No more team sales until {cap.periodEnd ? utcTime(cap.periodEnd) : "reset"}
@@ -70,8 +74,8 @@ export function CapCard({ s }: { s: LiveState }) {
 
                 {/* The three numbers that explain the headline, directly under it. */}
                 <dl className="mt-6 grid gap-6 sm:grid-cols-3">
-                  <Stat label="Already sold today" value={tokens(cap.spentThisPeriod, token.decimals)} />
-                  <Stat label="Still allowed today" value={tokens(cap.remaining, token.decimals)} />
+                  <Stat label="Already sold today" value={tokensUp(cap.spentThisPeriod, token.decimals)} />
+                  <Stat label="Left under today's limit" value={tokens(cap.remaining, token.decimals)} />
                   <Stat
                     label="Cap resets in"
                     value={until(cap.periodEnd)}
@@ -82,7 +86,7 @@ export function CapCard({ s }: { s: LiveState }) {
                 <div className="mt-8">
                   <VaneTrack
                     filled={share(cap.spentThisPeriod, cap.allowance)}
-                    label={`${tokens(cap.spentThisPeriod, token.decimals)} of ${tokens(cap.allowance, token.decimals)} tokens sold today`}
+                    label={`${tokensUp(cap.spentThisPeriod, token.decimals)} of ${tokens(cap.allowance, token.decimals)} tokens sold today`}
                   />
                 </div>
               </>

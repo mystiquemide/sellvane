@@ -15,7 +15,7 @@ export function ProofBand() {
     <section aria-labelledby="proof-title" className="bg-ink text-white">
       <div className="mx-auto grid max-w-[1200px] gap-12 px-4 py-20 md:grid-cols-2 md:gap-16 md:px-6 md:py-[120px]">
         <div>
-          <p className="font-eyebrow text-sm uppercase tracking-[0.08em] text-white/60">The chain said no</p>
+          <p className="font-eyebrow text-sm uppercase tracking-[0.08em] text-white/60">Base rejected a sale over the limit</p>
           <h2 id="proof-title" className="mt-4 font-display text-[38px] leading-[1.1] md:text-[54px] md:leading-[1.05]">
             We tried to sell one token over the cap.
           </h2>

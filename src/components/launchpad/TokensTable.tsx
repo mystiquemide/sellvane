@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { basescanAddress, basescanTx, short, tokenLabel, tokens, utcTime } from "@/lib/format";
+import { basescanAddress, basescanTx, short, tokenLabel, tokens, tokensUp, utcTime } from "@/lib/format";
 import { useToken, type TokenData } from "@/lib/useToken";
 
 const STAMP: Record<string, string> = { SELL: "Sold", WAIT: "Waited", SKIP: "Paused", BLOCKED: "Blocked" };
-const HEADERS = ["Token", "Team account", "Cap / day", "Sold today", "Left", "Went around the cap", "Last agent move"];
+const HEADERS = ["Token", "Team account", "Cap / day", "Sold today", "Left", "Outside Sellvane", "Last agent move"];
 
 function lastMove(d: TokenData) {
   const m = d.decisions[0];
@@ -35,7 +35,7 @@ function cells(d: TokenData): React.ReactNode[] {
       {short(d.team.address)}
     </a>,
     <span key="c" className="font-mono">{tokens(d.cap.allowance, dec)}</span>,
-    <span key="s" className="font-mono">{tokens(d.cap.spentThisPeriod, dec)}</span>,
+    <span key="s" className="font-mono">{tokensUp(d.cap.spentThisPeriod, dec)}</span>,
     <span key="l" className="font-mono">{tokens(d.cap.remaining, dec)}</span>,
     <Uncapped key="u" n={d.uncappedMoves.length} />,
     <span key="m">{lastMove(d)}</span>,
@@ -65,7 +65,7 @@ function TokenRowView({ slug, layout }: { slug: string; layout: "row" | "block" 
           <td key={HEADERS[i]} className="py-5 pr-4">{v}</td>
         ))}
         <td className="py-5 text-right">
-          <Link href={`/live/${slug}`} className="whitespace-nowrap font-medium underline-offset-4 hover:underline">Open →</Link>
+          <Link href={`/live/${slug}`} className="whitespace-nowrap font-medium underline-offset-4 hover:underline">View live cap →</Link>
         </td>
       </tr>
     );

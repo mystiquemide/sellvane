@@ -4,6 +4,13 @@ export function tokens(raw: string | null | undefined, decimals = 18): string {
   return (BigInt(raw) / BigInt(10) ** BigInt(decimals)).toLocaleString("en-US");
 }
 
+/** Like `tokens`, but rounds up. Used for amounts sold, so sold + left adds up to the cap. */
+export function tokensUp(raw: string | null | undefined, decimals = 18): string {
+  if (!raw) return "0";
+  const unit = BigInt(10) ** BigInt(decimals);
+  return ((BigInt(raw) + unit - BigInt(1)) / unit).toLocaleString("en-US");
+}
+
 /** Share of `part` in `whole`, 0..1, safe for huge integers. */
 export function share(part: string, whole: string): number {
   const w = BigInt(whole);

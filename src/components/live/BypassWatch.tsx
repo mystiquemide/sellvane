@@ -57,7 +57,7 @@ export function BypassWatch({ s }: { s: LiveState }) {
                     <dd className="mt-1 font-mono text-3xl">{cappedMoves}</dd>
                   </div>
                   <div className={`border-t pt-4 ${uncappedMoves.length ? "border-alert border-solid" : "border-dashed border-line"}`}>
-                    <dt className="text-sm text-muted">Went around the cap</dt>
+                    <dt className="text-sm text-muted">Transfers outside Sellvane</dt>
                     <dd className={`mt-1 font-mono text-3xl`}>{uncappedMoves.length}</dd>
                   </div>
                 </dl>

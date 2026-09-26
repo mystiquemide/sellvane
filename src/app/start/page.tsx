@@ -26,7 +26,7 @@ export default function StartPage() {
             Cap your token in three steps.
           </h1>
           <p className="mt-4 max-w-[680px] text-lg leading-[1.6] text-muted">
-            One signature from your team&apos;s Base Account. No custody, no deposit. You can revoke it any time.
+            One signed permission from your team&apos;s Base Account. Sellvane never holds your tokens or the ETH from sales.
           </p>
           <p className="mt-5 max-w-[680px] rounded-[16px] bg-butter px-5 py-3 text-base leading-[1.5]">
             Your unlocked tokens must sit in a Coinbase Base Account (smart wallet). If they are in a multisig or another wallet, move the amount you plan to sell there first.

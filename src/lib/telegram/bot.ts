@@ -4,7 +4,7 @@ import { tokenSnapshot } from "../status";
 import { listDecisions } from "../store/db";
 import { findWethPool, readTokenInfo, TokenCheckError } from "../chain/token";
 import { previewMaxSale } from "../preview";
-import { basescanAddress, basescanTx, pct, short, tokenLabel, tokens, until, utcTime } from "../format";
+import { basescanAddress, basescanTx, pct, short, tokenLabel, tokens, tokensUp, until, utcTime } from "../format";
 
 const API = () => `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 const origin = () => process.env.PUBLIC_ORIGIN ?? "https://sellvane.midelabs.xyz";
@@ -81,8 +81,8 @@ async function capReply(row: TokenRow): Promise<Reply> {
     `<b>${esc(tokenLabel(s.token))}</b>`,
     `Today the team can sell at most ${code(tokens(s.cap.allowance, d))} tokens.`,
     "",
-    `Already sold today: ${code(tokens(s.cap.spentThisPeriod, d))}`,
-    `Still allowed today: ${code(tokens(s.cap.remaining, d))}`,
+    `Already sold today: ${code(tokensUp(s.cap.spentThisPeriod, d))}`,
+    `Left under today's limit: ${code(tokens(s.cap.remaining, d))}`,
     s.cap.periodEnd ? `Cap resets in ${until(s.cap.periodEnd)} (at ${utcTime(s.cap.periodEnd)})` : "No active cap right now.",
   ];
   if (s.cap.activePermissions > 1) lines.push(`Sum of ${s.cap.activePermissions} active permissions.`);
@@ -123,7 +123,7 @@ async function bypassReply(row: TokenRow): Promise<Reply> {
     `Checked every transfer from block ${Number(s.scan.fromBlock).toLocaleString("en-US")} through ${Number(s.scan.toBlock).toLocaleString("en-US")}.`,
     "",
     `Went through Sellvane, under the cap: ${code(String(s.cappedMoves))}`,
-    `Went around the cap: ${code(String(s.uncappedMoves.length))}`,
+    `Transfers outside Sellvane: ${code(String(s.uncappedMoves.length))}`,
   ];
   if (!s.uncappedMoves.length) out.push("", "In that range, nothing left the team account outside the cap.");
   for (const m of s.uncappedMoves.slice(0, 5)) {

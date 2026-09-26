@@ -404,6 +404,38 @@ function SignStep({ c, limits, seller, onDone }: { c: Checked; limits: Limits; s
   const empty = balance !== null && balance === BigInt(0);
   return (
     <div>
+      <dl className="mb-8 grid max-w-[760px] gap-4 rounded-[16px] border border-dashed border-line p-5 text-base sm:grid-cols-2">
+        <div>
+          <dt className="text-sm text-muted">Who can spend</dt>
+          <dd className="mt-1">
+            Only the Sellvane seller contract,{" "}
+            <a href={basescanAddress(seller)} target="_blank" rel="noopener noreferrer" className="font-mono underline underline-offset-4">
+              {short(seller)}
+            </a>
+          </dd>
+        </div>
+        <div>
+          <dt className="text-sm text-muted">How much</dt>
+          <dd className="mt-1">
+            Up to {tokens(limits.capRaw.toString(), c.decimals)} {c.symbol} per 24 hours, enforced by Coinbase&apos;s spend permission contract
+          </dd>
+        </div>
+        <div>
+          <dt className="text-sm text-muted">Where the ETH goes</dt>
+          <dd className="mt-1">Back to your team account, in the same transaction as each sale</dd>
+        </div>
+        <div>
+          <dt className="text-sm text-muted">Revoking</dt>
+          <dd className="mt-1">Stops all future Sellvane sales at once. Past sales stay on chain.</dd>
+        </div>
+        <div className="sm:col-span-2">
+          <dt className="text-sm text-muted">Before you sign</dt>
+          <dd className="mt-1">
+            The tokens must already be in this Base Account. Moving them in from a multisig or another wallet is a separate transfer you make yourself.
+          </dd>
+        </div>
+      </dl>
+
       {!account ? (
         <>
           <p className="max-w-[640px] text-base leading-[1.6] text-muted">
