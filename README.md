@@ -1,5 +1,7 @@
 # Sellvane
 
+[![CI](https://github.com/mystiquemide/sellvane/actions/workflows/ci.yml/badge.svg)](https://github.com/mystiquemide/sellvane/actions/workflows/ci.yml)
+
 An AI agent that sells a crypto team's unlocked tokens under a public daily cap enforced on Base.
 
 The team signs one Coinbase spend permission: at most N tokens per 24 hours, spendable only by the Sellvane seller contract. The agent reads the Uniswap pool every 10 minutes and decides whether to sell a slice or wait. Anyone can check the cap, every sale and every transfer on Base.
@@ -173,11 +175,12 @@ Stack: Next.js, viem, Base Account SDK, Coinbase spend permissions, Uniswap v3, 
 ## Run locally
 
 ```bash
+git clone --recursive https://github.com/mystiquemide/sellvane && cd sellvane
 npm install
 cp .env.example .env.local   # RPC, keys, database
 npm run db:migrate
 npm run dev
-npm test                     # 30 unit tests
+npm test                     # 30 tests; 14 need the database and team key and skip without them
 cd contracts && forge test --fork-url $BASE_RPC_URL   # 11 fork tests
 ```
 
