@@ -79,7 +79,7 @@ async function capReply(row: TokenRow): Promise<Reply> {
   const d = row.decimals;
   const lines = [
     `<b>${esc(tokenLabel(s.token))}</b>`,
-    `Today the team can sell at most ${code(tokens(s.cap.allowance, d))} tokens.`,
+    `Most the team can sell through Sellvane today: ${code(tokens(s.cap.allowance, d))} tokens.`,
     "",
     `Already sold today: ${code(tokensUp(s.cap.spentThisPeriod, d))}`,
     `Left under today's limit: ${code(tokens(s.cap.remaining, d))}`,

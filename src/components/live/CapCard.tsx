@@ -17,7 +17,7 @@ export function CapCard({ s }: { s: LiveState }) {
     <section id="cap" aria-labelledby="cap-title" className="scroll-mt-6 mx-auto max-w-[1200px] px-4 md:px-6">
       <div className="rounded-[20px] bg-card p-6 md:p-10">
         <h2 id="cap-title" className="font-eyebrow text-sm uppercase tracking-[0.08em]">
-          Today the team can sell at most
+          Most the team can sell through Sellvane today
         </h2>
 
         {s.status === "error" ? (
