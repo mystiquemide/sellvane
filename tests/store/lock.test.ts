@@ -1,7 +1,10 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { sql, withTickLock } from "@/lib/store/db";
 
-describe("tick lock (Neon)", () => {
+// Needs the ledger database and the team owner key. Skipped when they are not set, as in CI.
+const hasSecrets = Boolean(process.env.DATABASE_URL && process.env.TEAM_OWNER_PRIVATE_KEY && process.env.PERMISSION_JSON);
+
+describe.skipIf(!hasSecrets)("tick lock (Neon)", () => {
   afterAll(async () => {
     await sql().end();
   });

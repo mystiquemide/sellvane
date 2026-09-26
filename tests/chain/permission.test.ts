@@ -5,6 +5,9 @@ import { MANAGER_ABI } from "@/lib/chain/abis";
 import { buildPermission, permissionHash, readCapStatus, signPermission } from "@/lib/chain/permission";
 import type { Hex } from "viem";
 
+// Needs the ledger database and the team owner key. Skipped when they are not set, as in CI.
+const hasSecrets = Boolean(process.env.DATABASE_URL && process.env.TEAM_OWNER_PRIVATE_KEY && process.env.PERMISSION_JSON);
+
 describe("permission (Base mainnet reads)", () => {
   const d = deployment();
   const p = buildPermission({ account: d.team, seller: d.seller, token: d.token, dailyCap: BigInt(123) * BigInt(10) ** BigInt(18), start: 1700000000, salt: BigInt(987654321) });
@@ -21,7 +24,7 @@ describe("permission (Base mainnet reads)", () => {
     expect(s.remaining).toBe(p.allowance);
   });
 
-  it("team owner key produces a signature the team account accepts (ERC-1271)", async () => {
+  it.skipIf(!hasSecrets)("team owner key produces a signature the team account accepts (ERC-1271)", async () => {
     const sig = await signPermission(p, process.env.TEAM_OWNER_PRIVATE_KEY as Hex);
     const magic = await publicClient.readContract({
       address: d.team,
@@ -32,7 +35,7 @@ describe("permission (Base mainnet reads)", () => {
     expect(magic).toBe("0x1626ba7e");
   });
 
-  it("refuses to sign for an account the key does not control", async () => {
+  it.skipIf(!hasSecrets)("refuses to sign for an account the key does not control", async () => {
     const other = { ...p, account: d.seller };
     await expect(signPermission(other, process.env.TEAM_OWNER_PRIVATE_KEY as Hex)).rejects.toThrow();
   });

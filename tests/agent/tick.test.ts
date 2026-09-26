@@ -3,7 +3,10 @@ import { tick } from "@/lib/agent/tick";
 import { getToken } from "@/lib/registry";
 import { sql } from "@/lib/store/db";
 
-describe("agent tick safety (Base mainnet reads, no sends)", () => {
+// Needs the ledger database and the team owner key. Skipped when they are not set, as in CI.
+const hasSecrets = Boolean(process.env.DATABASE_URL && process.env.TEAM_OWNER_PRIVATE_KEY && process.env.PERMISSION_JSON);
+
+describe.skipIf(!hasSecrets)("agent tick safety (Base mainnet reads, no sends)", () => {
   afterAll(async () => {
     await sql().end();
   });

@@ -6,9 +6,12 @@ import type { Hex } from "viem";
 import { sql } from "@/lib/store/db";
 import { deployment } from "@/lib/chain/config";
 
+// Needs the ledger database and the team owner key. Skipped when they are not set, as in CI.
+const hasSecrets = Boolean(process.env.DATABASE_URL && process.env.TEAM_OWNER_PRIVATE_KEY && process.env.PERMISSION_JSON);
+
 const served = () => fromJson(JSON.parse(process.env.PERMISSION_JSON!));
 
-describe("token checks (Base mainnet)", () => {
+describe.skipIf(!hasSecrets)("token checks (Base mainnet)", () => {
   afterAll(async () => {
     await sql().end();
   });
