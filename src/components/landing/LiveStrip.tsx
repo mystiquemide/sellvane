@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Lookup } from "../Lookup";
 import { TrackSkeleton, VaneTrack } from "../VaneTrack";
-import { basescanTx, pct, share, tokens, until } from "@/lib/format";
+import { basescanTx, pct, share, tokens, tokensUp, until } from "@/lib/format";
 import { useToken, type TokenData } from "@/lib/useToken";
 
 const ACTION_LABEL: Record<string, string> = { SELL: "Sold", WAIT: "Waited", SKIP: "Paused", BLOCKED: "Blocked" };
@@ -56,7 +56,7 @@ export function LiveStrip({ slug }: { slug: string }) {
               {s.status === "ready" ? (
                 <VaneTrack
                   filled={share(s.data.cap.spentThisPeriod, s.data.cap.allowance)}
-                  label={`${tokens(s.data.cap.spentThisPeriod, s.data.token.decimals)} of ${tokens(s.data.cap.allowance, s.data.token.decimals)} tokens sold today`}
+                  label={`${tokensUp(s.data.cap.spentThisPeriod, s.data.token.decimals)} of ${tokens(s.data.cap.allowance, s.data.token.decimals)} tokens sold today`}
                 />
               ) : (
                 <TrackSkeleton />
@@ -66,7 +66,7 @@ export function LiveStrip({ slug }: { slug: string }) {
             <dl className="mt-5 grid grid-cols-1 gap-y-2 font-mono text-[15px] sm:grid-cols-2 sm:gap-x-6 md:flex md:flex-wrap md:gap-x-10 [&_dd]:whitespace-nowrap">
               {s.status === "ready" ? (
                 <>
-                  <div><dt className="sr-only">Sold today</dt><dd><span className="text-ink">{tokens(s.data.cap.spentThisPeriod, s.data.token.decimals)}</span> <span className="text-muted">tokens sold</span></dd></div>
+                  <div><dt className="sr-only">Sold today</dt><dd><span className="text-ink">{tokensUp(s.data.cap.spentThisPeriod, s.data.token.decimals)}</span> <span className="text-muted">tokens sold</span></dd></div>
                   <div><dt className="sr-only">Left today</dt><dd><span className="text-ink">{tokens(s.data.cap.remaining, s.data.token.decimals)}</span> <span className="text-muted">left</span></dd></div>
                   <div><dt className="sr-only">Daily cap</dt><dd><span className="text-muted">cap</span> <span className="text-ink">{tokens(s.data.cap.allowance, s.data.token.decimals)}</span> <span className="text-muted">/ day</span></dd></div>
                   <div><dt className="sr-only">Resets</dt><dd><span className="text-muted">resets in</span> <span className="text-ink">{until(s.data.cap.periodEnd)}</span></dd></div>
