@@ -82,7 +82,7 @@ A test token with a real Uniswap v3 pool runs through the full flow. All numbers
 | | |
 |---|---|
 | Daily cap | 5,000,000 tokens (0.5% of supply) |
-| Agent sales | 4, highest price impact 0.72% |
+| Agent sales | 11 as of Sep 26, highest price impact 0.72% |
 | Over-cap attempt | 1, rejected by Base |
 | Transfers outside Sellvane | 0 |
 | Example sale | [0xf2555f5f...06fd](https://basescan.org/tx/0xf2555f5fa5fc9b31e9414e786d63744584e8e8503d002ce83a9914c7f99406fd) |
