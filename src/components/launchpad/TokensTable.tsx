@@ -47,7 +47,7 @@ function TokenRowView({ slug, layout }: { slug: string; layout: "row" | "block" 
   const s = useToken(slug);
   if (s.status === "notfound") return null;
   if (s.status !== "ready") {
-    const msg = s.status === "loading" ? null : "Base did not answer for this token.";
+    const msg = s.status === "loading" ? null : "Base did not answer for this token. Refresh the page to try again.";
     const skeleton = msg ?? <div className="h-5 w-full rounded-full bg-line" aria-hidden="true" />;
     return layout === "row" ? (
       <tr className="border-b border-dashed border-line">

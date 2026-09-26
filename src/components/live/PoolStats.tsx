@@ -31,7 +31,7 @@ export function PoolStats({ s }: { s: LiveState }) {
 
         {s.status === "error" ? (
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-base">Base did not answer. Numbers are hidden until it does.</p>
+            <p className="text-base">Base did not answer, so these numbers are hidden rather than shown out of date.</p>
             <button onClick={s.retry} className="rounded-full bg-ink px-6 py-3 text-base font-medium text-white hover:bg-[#1a1a1a]">
               Try again
             </button>

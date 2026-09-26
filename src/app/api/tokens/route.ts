@@ -25,6 +25,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ slug: row.slug, token: row.token, permissionHash: row.permissionHash }, { status: 201 });
   } catch (e) {
     if (e instanceof RegistryError) return NextResponse.json({ error: e.message }, { status: e.status });
-    return NextResponse.json({ error: "Could not register the token. Base may not have answered; try again." }, { status: 503 });
+    return NextResponse.json({ error: "Your signature worked, but we could not save the cap because Base did not answer. Try again in a minute. You will not be asked to pay anything." }, { status: 503 });
   }
 }

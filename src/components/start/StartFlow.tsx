@@ -292,7 +292,7 @@ const BASE_HEX = "0x2105";
 function friendly(e: unknown): string {
   const err = e as { code?: number; message?: string };
   if (err?.code === 4001 || /reject|denied|cancel/i.test(err?.message ?? "")) return "You closed the wallet window. Nothing was signed.";
-  return err?.message?.split("\n")[0] ?? "Something went wrong. Try again.";
+  return err?.message?.split("\n")[0] ?? "That did not go through. Nothing was signed or sent. Try again, or reload the page.";
 }
 
 /** Step 3: connect the team's Base Account and sign the daily cap in Coinbase's own consent window. */

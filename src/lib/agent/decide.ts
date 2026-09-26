@@ -35,7 +35,7 @@ The reason is one plain sentence for token holders, max 200 characters. Use ever
 /** Ask the model to choose within bounds. Any failure or invalid output returns a WAIT. */
 export async function decide(facts: Facts, opts: { apiKey?: string; model?: string; client?: Pick<Groq, "chat"> } = {}): Promise<Choice> {
   const apiKey = opts.apiKey ?? process.env.GROQ_API_KEY;
-  if (!apiKey && !opts.client) return { action: "WAIT", fraction: 0.25, reason: "Agent model unavailable, waiting.", source: "fallback" };
+  if (!apiKey && !opts.client) return { action: "WAIT", fraction: 0.25, reason: "The agent's model did not answer, so it waited. It tries again at the next check.", source: "fallback" };
   const client = opts.client ?? new Groq({ apiKey });
   try {
     const res = await client.chat.completions.create({
@@ -49,10 +49,10 @@ export async function decide(facts: Facts, opts: { apiKey?: string; model?: stri
     });
     const raw = res.choices[0]?.message?.content ?? "";
     const parsed = schema.safeParse(JSON.parse(raw));
-    if (!parsed.success) return { action: "WAIT", fraction: 0.25, reason: "Agent output rejected by validation, waiting.", source: "fallback" };
+    if (!parsed.success) return { action: "WAIT", fraction: 0.25, reason: "The agent's answer did not pass Sellvane's checks, so it waited instead of selling.", source: "fallback" };
     const fraction = FRACTIONS.filter((x) => x <= (parsed.data.fraction ?? 0)).pop() ?? 0.25;
     return { action: parsed.data.action, reason: parsed.data.reason, fraction, source: "model" };
   } catch {
-    return { action: "WAIT", fraction: 0.25, reason: "Agent model unavailable, waiting.", source: "fallback" };
+    return { action: "WAIT", fraction: 0.25, reason: "The agent's model did not answer, so it waited. It tries again at the next check.", source: "fallback" };
   }
 }

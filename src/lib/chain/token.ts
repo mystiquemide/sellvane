@@ -57,7 +57,7 @@ export async function findWethPool(token: Address): Promise<PoolInfo> {
   }
   const best = found.sort((a, b) => (b.wethReserve > a.wethReserve ? 1 : b.wethReserve < a.wethReserve ? -1 : 0))[0];
   if (!best || best.wethReserve === BigInt(0)) {
-    throw new TokenCheckError("no_pool", "No Uniswap v3 pool paired with WETH on Base holds any ETH. Aerodrome and Uniswap v4 pools are not supported yet.");
+    throw new TokenCheckError("no_pool", "No Uniswap v3 pool paired with WETH on Base holds any ETH. Aerodrome and Uniswap v4 pools are not supported yet. If your token only trades there, Sellvane cannot cap it yet.");
   }
   return best;
 }

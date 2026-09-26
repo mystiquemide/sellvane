@@ -6,7 +6,7 @@ type Row = TokenData["decisions"][number];
 const STAMP: Record<Row["action"], string> = { SELL: "Sold", WAIT: "Waited", SKIP: "Paused", BLOCKED: "Blocked" };
 const BY: Record<string, string> = {
   model: "Decided by the agent",
-  fallback: "Agent unavailable, safe default applied",
+  fallback: "Model did not answer, safe default used",
   rule: "Decided by a fixed rule",
   manual: "Sent by hand as a proof",
 };
@@ -92,7 +92,7 @@ export function AgentLedger({ s }: { s: LiveState }) {
         <div className="bg-butter px-5 md:px-10">
           {s.status === "error" ? (
             <div className="flex flex-wrap items-center justify-between gap-4 py-8">
-              <p className="text-base">Base did not answer. Moves are hidden until it does.</p>
+              <p className="text-base">Base did not answer, so these moves are hidden rather than shown out of date.</p>
               <button onClick={s.retry} className="rounded-full bg-ink px-6 py-3 text-base font-medium text-white hover:bg-[#1a1a1a]">
                 Try again
               </button>

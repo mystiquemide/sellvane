@@ -58,7 +58,7 @@ export function Nav({
               href="/live"
               className="rounded-full bg-marigold px-5 py-2.5 text-base font-medium text-ink transition-colors hover:bg-marigold-deep md:px-6"
             >
-              See it live
+              Live cap
             </Link>
           )}
 

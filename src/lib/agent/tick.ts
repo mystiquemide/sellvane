@@ -67,9 +67,9 @@ export async function tick(row: TokenRow, opts: { ownerPk?: Hex; slippageBps?: n
   const cap = await readCapStatus(p);
   const base = { at: new Date().toISOString(), permissionHash: hash, remainingBefore: cap.remaining.toString(), txHash: null, txStatus: null } as const;
 
-  if (cap.revoked) return { ...base, action: "SKIP", reason: "Permission revoked by the team.", source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null };
+  if (cap.revoked) return { ...base, action: "SKIP", reason: "The team revoked its cap, so the agent stopped selling. Any tokens leaving the team account now show in the bypass watch.", source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null };
   if (cap.remaining === BigInt(0)) {
-    return { ...base, action: "SKIP", reason: "Daily cap reached. No more team sells until reset.", source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null };
+    return { ...base, action: "SKIP", reason: "Today's cap is used up. No more team sales until it resets.", source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null };
   }
 
   // First sale of a permission approves it on chain with the owner's signature: the team's stored
@@ -79,7 +79,7 @@ export async function tick(row: TokenRow, opts: { ownerPk?: Hex; slippageBps?: n
     ? "0x"
     : row.signature ?? (opts.ownerPk ? await signPermission(p, opts.ownerPk) : ("0x" as Hex));
   if (!cap.approved && sig === "0x") {
-    return { ...base, action: "SKIP", reason: "Permission is not approved on chain and no team signature is on file.", source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null };
+    return { ...base, action: "SKIP", reason: "Waiting for the team's signature. Nothing can be sold until the team signs the cap.", source: "rule", amountIn: null, ethOut: null, impactBps: null, facts: null };
   }
 
   // Rate limits: space sales out and cap how many happen per day, per token.
@@ -121,7 +121,7 @@ export async function tick(row: TokenRow, opts: { ownerPk?: Hex; slippageBps?: n
     const s = bounds.smallest;
     const reason = s
       ? `Pool too thin: even ${fmt(s.amountIn)} ${facts.symbol} would move price ${(s.impactBps / 100).toFixed(2)}%, above the ${facts.maxImpactPct}% limit.`
-      : "Pool could not quote any sell size.";
+      : "The pool could not price a sale, so the agent waited.";
     return { ...base, action: "WAIT", reason, source: "rule", amountIn: null, ethOut: null, impactBps: s?.impactBps ?? null, facts };
   }
 

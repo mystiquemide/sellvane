@@ -21,7 +21,7 @@ export function ProductPeek({ slug }: { slug: string }) {
       <div className="mt-4 rounded-[16px] bg-butter px-4 py-2">
         {s.status === "ready" ? (
           s.data.decisions.length === 0 ? (
-            <p className="py-3 text-sm">No agent moves yet.</p>
+            <p className="py-3 text-sm">No agent moves yet. The agent checks every 10 minutes and every move appears here.</p>
           ) : (
             <ul>
               {s.data.decisions.slice(0, 3).map((d) => (
@@ -51,7 +51,7 @@ export function ProductPeek({ slug }: { slug: string }) {
             ))}
           </div>
         ) : (
-          <p className="py-3 text-sm">Base did not answer. Moves are hidden until it does.</p>
+          <p className="py-3 text-sm">Base did not answer, so these moves are hidden rather than shown out of date.</p>
         )}
       </div>
 

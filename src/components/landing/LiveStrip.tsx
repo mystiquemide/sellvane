@@ -39,13 +39,13 @@ export function LiveStrip({ slug }: { slug: string }) {
             Team sell cap, today
           </h2>
           <p className="font-mono text-sm text-muted">
-            {s.status === "ready" ? `read from Base, block ${Number(s.data.block).toLocaleString("en-US")}` : s.status === "loading" ? "reading Base..." : ""}
+            {s.status === "ready" ? `Read from Base, block ${Number(s.data.block).toLocaleString("en-US")}` : s.status === "loading" ? "Reading Base..." : ""}
           </p>
         </div>
 
         {s.status === "error" ? (
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-base">Base did not answer. Numbers are hidden until it does.</p>
+            <p className="text-base">Base did not answer, so these numbers are hidden rather than shown out of date.</p>
             <button onClick={s.retry} className="rounded-full bg-ink px-6 py-3 text-base font-medium text-white hover:bg-[#1a1a1a]">
               Try again
             </button>

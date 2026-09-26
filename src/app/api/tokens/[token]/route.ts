@@ -29,6 +29,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
     return NextResponse.json(body, { headers: { "cache-control": "no-store" } });
   } catch (e) {
     // Fail closed: never show cached or guessed numbers when the chain cannot be read.
-    return NextResponse.json({ error: "chain read failed", detail: (e as Error).message.split("\n")[0] }, { status: 503 });
+    return NextResponse.json({ error: "Base did not answer. Try again." }, { status: 503 });
   }
 }

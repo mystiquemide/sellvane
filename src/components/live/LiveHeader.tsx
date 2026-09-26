@@ -37,9 +37,9 @@ export function LiveHeader({ s }: { s: LiveState }) {
         </div>
         <p className="max-w-[300px] font-mono text-sm text-muted md:text-right" aria-live="polite">
           {ready
-            ? `Snapshot at block ${Number(ready.block).toLocaleString("en-US")}, read ${ready.readAt.slice(11, 19)} UTC. Every section uses it. Refreshes every 30s.`
+            ? `Snapshot at block ${Number(ready.block).toLocaleString("en-US")}, read ${ready.readAt.slice(11, 19)} UTC. Every section uses it. Refreshes every 30 seconds.`
             : s.status === "loading"
-              ? "reading Base..."
+              ? "Reading Base..."
               : "Base did not answer"}
         </p>
       </div>
