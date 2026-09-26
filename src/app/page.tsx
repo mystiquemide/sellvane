@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <div className="relative">
       <Nav variant="overlay" />
-      <main>
+      <main id="main" tabIndex={-1}>
         <Hero />
         <LiveStrip slug={slug} />
         <ProofBand />

@@ -19,7 +19,7 @@ export default function LaunchpadPage() {
           { href: "/start", label: "Cap a token" },
         ]}
       />
-      <main>
+      <main id="main" tabIndex={-1}>
         <LaunchpadView />
       </main>
     </>

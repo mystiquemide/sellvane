@@ -51,6 +51,14 @@ export function CheckYourself({ s }: { s: LiveState }) {
           </li>
         ))}
       </ol>
+
+      <p className="mt-12 border-t border-dashed border-line pt-6 text-base text-muted">
+        Follow this cap in Telegram too:{" "}
+        <a href="https://t.me/sellvane_bot" target="_blank" rel="noopener noreferrer" className="font-medium text-ink underline underline-offset-4">
+          @sellvane_bot
+        </a>{" "}
+        answers /cap, /moves and /bypass with the same live data.
+      </p>
     </section>
   );
 }

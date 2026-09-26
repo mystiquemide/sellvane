@@ -19,7 +19,7 @@ export default function StartPage() {
           { href: "/live", label: "Live cap" },
         ]}
       />
-      <main>
+      <main id="main" tabIndex={-1}>
         <section aria-labelledby="start-title" className="mx-auto max-w-[1200px] px-4 pb-10 pt-12 md:px-6 md:pt-16">
           <p className="font-eyebrow text-sm uppercase tracking-[0.08em]">For teams</p>
           <h1 id="start-title" className="mt-4 max-w-[1100px] font-display text-[44px] leading-[1.05] md:text-[64px]">

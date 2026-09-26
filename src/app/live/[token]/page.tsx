@@ -32,7 +32,7 @@ export default async function LivePage({ params }: { params: Promise<{ token: st
               ]
         }
       />
-      <main>
+      <main id="main" tabIndex={-1}>
         <LiveView slug={token.toLowerCase()} />
       </main>
     </>

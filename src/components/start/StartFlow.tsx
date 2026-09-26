@@ -37,6 +37,9 @@ function StepShell({ n, title, active, children }: { n: number; title: string; a
   );
 }
 
+// A real, liquid Base token with a Uniswap v3 WETH pool, so visitors can try steps 1 and 2.
+const SAMPLE_TOKEN = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed";
+
 /** Step 1: paste the token, read it from Base, find its pool. */
 function TokenStep({ onChecked }: { onChecked: (c: Checked | null) => void }) {
   const [value, setValue] = useState("");
@@ -107,6 +110,23 @@ function TokenStep({ onChecked }: { onChecked: (c: Checked | null) => void }) {
           {busy ? "Reading Base..." : checked ? "Check another token" : "Check token"}
         </button>
       </form>
+
+      {!checked && !busy ? (
+        <p className="mt-3 text-sm text-muted">
+          No token in mind?{" "}
+          <button
+            type="button"
+            onClick={() => {
+              setValue(SAMPLE_TOKEN);
+              run(SAMPLE_TOKEN);
+            }}
+            className="font-medium text-ink underline underline-offset-4"
+          >
+            Try it with DEGEN
+          </button>
+          , a live Base token with a Uniswap v3 pool. You can check it and preview sales without signing anything.
+        </p>
+      ) : null}
 
       {error ? (
         <p className="mt-4 rounded-[16px] bg-butter px-5 py-3 text-base" role="alert">

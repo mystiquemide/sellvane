@@ -28,7 +28,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${bricolage.variable} ${dmSans.variable} ${dmMono.variable} ${departure.variable} antialiased`}>
-      <body className="min-h-screen bg-canvas text-ink font-sans">{children}</body>
+      <body className="min-h-screen bg-canvas text-ink font-sans">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:text-white"
+        >
+          Skip to content
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

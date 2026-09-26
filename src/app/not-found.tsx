@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <>
       <Nav cta={<></>} />
-      <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-20 md:px-6 md:pt-28">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[1200px] px-4 pb-24 pt-20 md:px-6 md:pt-28">
         <VaneMark className="h-14 w-14" />
         <p className="mt-8 font-eyebrow text-sm uppercase tracking-[0.08em]">404</p>
         <h1 className="mt-4 font-display text-[48px] leading-[1.02] md:text-[72px]">This page sold out.</h1>
