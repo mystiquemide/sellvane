@@ -46,7 +46,7 @@ export function HowItWorks() {
           Three steps. One hard limit.
         </h2>
 
-        <ol className="mt-12 grid gap-10 md:mt-16 md:grid-cols-3 md:gap-12">
+        <ol data-reveal="stagger" className="mt-12 grid gap-10 md:mt-16 md:grid-cols-3 md:gap-12">
           {STEPS.map((s, i) => (
             <li key={s.title} className="border-t border-dashed border-line pt-6">
               <div className="flex items-center justify-between">

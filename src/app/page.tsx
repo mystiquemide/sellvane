@@ -8,6 +8,7 @@ import { ProofBand } from "@/components/landing/ProofBand";
 import { Audiences } from "@/components/landing/Audiences";
 import { ForLaunchpads } from "@/components/landing/ForLaunchpads";
 import { BuiltWith } from "@/components/landing/BuiltWith";
+import { RevealObserver } from "@/components/RevealObserver";
 
 export default function Home() {
   const slug = featuredSlug();
@@ -24,6 +25,7 @@ export default function Home() {
         <BuiltWith />
       </main>
       <Footer />
+      <RevealObserver />
     </div>
   );
 }

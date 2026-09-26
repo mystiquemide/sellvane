@@ -32,7 +32,7 @@ export function LiveStrip({ slug }: { slug: string }) {
   if (s.status === "notfound") return null;
 
   return (
-    <section aria-labelledby="live-strip-title" className="relative z-10 mx-auto -mt-28 max-w-[1200px] px-4 pb-20 md:px-6 md:pb-24">
+    <section data-reveal="up" aria-labelledby="live-strip-title" className="relative z-10 mx-auto -mt-28 max-w-[1200px] px-4 pb-20 md:px-6 md:pb-24">
       <div className="rounded-[20px] bg-card p-6 md:p-8">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="live-strip-title" className="font-display text-[26px] leading-[1.2]">

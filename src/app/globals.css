@@ -33,3 +33,51 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* ---------- Motion ----------
+   Hidden-until-revealed states apply only once JS has marked <html class="js">,
+   so content is never stuck invisible if scripts fail. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hero-zoom {
+  from { transform: scale(1.08); }
+  to { transform: scale(1); }
+}
+@keyframes sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.rise { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.rise-1 { animation-delay: 0.1s; }
+.rise-2 { animation-delay: 0.25s; }
+.rise-3 { animation-delay: 0.4s; }
+.hero-zoom { animation: hero-zoom 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.sway { animation: sway 4.5s ease-in-out infinite; transform-origin: 50% 85%; }
+
+.lift { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+.lift:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18); }
+.lift:active { transform: translateY(0); box-shadow: none; }
+
+[data-reveal="up"],
+[data-reveal="stagger"] > * {
+  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+html.js [data-reveal="up"]:not([data-shown]),
+html.js [data-reveal="stagger"]:not([data-shown]) > * {
+  opacity: 0;
+  transform: translateY(24px);
+}
+[data-reveal="stagger"] > *:nth-child(2) { transition-delay: 0.1s; }
+[data-reveal="stagger"] > *:nth-child(3) { transition-delay: 0.2s; }
+[data-reveal="stagger"] > *:nth-child(4) { transition-delay: 0.3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .hero-zoom, .sway { animation: none; }
+  .lift:hover { transform: none; }
+  [data-reveal="up"], [data-reveal="stagger"] > * { transition: none; }
+  html.js [data-reveal="up"]:not([data-shown]),
+  html.js [data-reveal="stagger"]:not([data-shown]) > * { opacity: 1; transform: none; }
+}

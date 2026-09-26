@@ -14,7 +14,7 @@ export function BuiltWith() {
         <h2 id="built-title" className="font-eyebrow text-sm uppercase tracking-[0.08em]">
           Built with
         </h2>
-        <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4 md:gap-12">
+        <ul data-reveal="stagger" className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4 md:gap-12">
           {LOGOS.map((l) => (
             <li key={l.name} className="border-t border-dashed border-line pt-6">
               <a href={l.href} target="_blank" rel="noopener noreferrer" className="group block" aria-label={`${l.name}: ${l.use}`}>

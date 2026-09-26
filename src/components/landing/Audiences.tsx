@@ -38,7 +38,7 @@ export function Audiences({ slug }: { slug: string }) {
   return (
     <section aria-labelledby="audiences-title" className="bg-canvas">
       <div className="mx-auto max-w-[1200px] px-4 py-20 md:px-6 md:py-[120px]">
-        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
+        <div data-reveal="stagger" className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
           <div>
             <p className="font-eyebrow text-sm uppercase tracking-[0.08em]">For holders and teams</p>
             <h2 id="audiences-title" className="mt-4 font-display text-[38px] leading-[1.1] md:text-[54px] md:leading-[1.05]">
@@ -51,7 +51,7 @@ export function Audiences({ slug }: { slug: string }) {
           <ProductPeek slug={slug} />
         </div>
 
-        <ul className="mt-14 grid gap-10 sm:grid-cols-2 md:mt-16 lg:grid-cols-4 lg:gap-10">
+        <ul data-reveal="stagger" className="mt-14 grid gap-10 sm:grid-cols-2 md:mt-16 lg:grid-cols-4 lg:gap-10">
           {POINTS.map((p) => (
             <li key={p.title} className="border-t border-dashed border-line pt-6">
               <div className="flex items-center justify-between">

@@ -27,7 +27,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${dmSans.variable} ${dmMono.variable} ${departure.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning className={`${bricolage.variable} ${dmSans.variable} ${dmMono.variable} ${departure.variable} antialiased`}>
+      <head>
+        {/* Enables scroll-reveal styles only when JS runs, before first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className="min-h-screen bg-canvas text-ink font-sans">
         <a
           href="#main"
