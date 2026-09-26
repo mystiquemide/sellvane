@@ -64,7 +64,9 @@ function WaitGroup({ g, dec }: { g: Extract<Group, { kind: "waits" }>; dec: numb
         <div>
           {hm(g.earliest.at)} to {hm(g.latest.at)} UTC
         </div>
-        <div className="text-muted">{day(g.latest.at)}</div>
+        <div className="text-muted">
+          {day(g.earliest.at) === day(g.latest.at) ? day(g.latest.at) : `${day(g.earliest.at)} to ${day(g.latest.at)}`}
+        </div>
       </div>
       <div>
         <Stamp action="WAIT" />
