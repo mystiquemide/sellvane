@@ -8,9 +8,21 @@ const dmSans = DM_Sans({ variable: "--font-dm-sans", subsets: ["latin"], weight:
 const dmMono = DM_Mono({ variable: "--font-dm-mono", subsets: ["latin"], weight: ["400"] });
 const departure = localFont({ variable: "--font-departure", src: "./fonts/DepartureMono-Regular.woff2" });
 
+const SITE = process.env.PUBLIC_ORIGIN ?? "https://sellvane.midelabs.xyz";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE),
   title: "Sellvane | Unlocks without the dump",
   description: "A public daily sell cap on team tokens, enforced on Base. Sellvane's agent sells inside it, only when the pool can take it.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Sellvane | Unlocks without the dump",
+    description: "A public daily sell cap on team tokens, enforced on Base. An AI agent sells inside it, only when the pool can take it.",
+    url: SITE,
+    siteName: "Sellvane",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", site: "@sellvane" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
