@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAddress, type Hex } from "viem";
 import { tick, type TickResult } from "@/lib/agent/tick";
-import { insertDecision, withTickLock } from "@/lib/store/db";
+import { insertDecision, lastDecision, withTickLock } from "@/lib/store/db";
 import { listTokens, type TokenRow } from "@/lib/registry";
 
 export const runtime = "nodejs";
@@ -20,6 +20,15 @@ function ownerKeyFor(row: TokenRow): Hex | undefined {
   return team && getAddress(team) === row.teamAccount ? (process.env.TEAM_OWNER_PRIVATE_KEY as Hex) : undefined;
 }
 
+const WAIT_RECORD_EVERY_MS = 60 * 60_000;
+
+/** A wait right after another recorded wait is written at most once an hour, so waits never bury sales. */
+async function isRepeatWait(t: TickResult): Promise<boolean> {
+  if (t.action !== "WAIT") return false;
+  const last = await lastDecision(t.permissionHash);
+  return !!last && last.action === "WAIT" && Date.now() - last.at.getTime() < WAIT_RECORD_EVERY_MS;
+}
+
 async function run(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const send = process.env.TICK_SEND !== "0";
@@ -29,7 +38,7 @@ async function run(req: Request) {
     try {
       const r = await withTickLock(`tick:${row.slug}`, async () => {
         const t = await tick(row, { ownerPk: ownerKeyFor(row), send });
-        if (!t.quiet) await insertDecision(t);
+        if (!t.quiet && !(await isRepeatWait(t))) await insertDecision(t);
         return t;
       });
       if (!r.ran) results.push({ slug: row.slug, skipped: "another tick is running" });

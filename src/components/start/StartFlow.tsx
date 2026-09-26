@@ -248,7 +248,7 @@ function LimitsStep({ c, onLimits }: { c: Checked; onLimits: (l: Limits | null) 
         </fieldset>
       </div>
 
-      <div className="rounded-[16px] bg-butter p-5 md:p-6" aria-live="polite">
+      <div className="self-start rounded-[16px] bg-butter p-5 md:p-6" aria-live="polite">
         <p className="font-eyebrow text-xs uppercase tracking-[0.08em]">Preview from the pool, right now</p>
         {previewError ? (
           <p className="mt-3 text-base">Base did not answer, so there is no preview. Your limits still work.</p>

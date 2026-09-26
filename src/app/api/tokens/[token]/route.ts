@@ -27,7 +27,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
     const body = { ...snapshot, decisions, agent: { maxImpactBps: row.maxImpactBps } };
     cache.set(row.slug, { at: Date.now(), body });
     return NextResponse.json(body, { headers: { "cache-control": "no-store" } });
-  } catch (e) {
+  } catch {
     // Fail closed: never show cached or guessed numbers when the chain cannot be read.
     return NextResponse.json({ error: "Base did not answer. Try again." }, { status: 503 });
   }

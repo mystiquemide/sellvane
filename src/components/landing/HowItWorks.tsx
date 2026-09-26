@@ -40,7 +40,7 @@ const STEPS = [
 export function HowItWorks() {
   return (
     <section id="how-it-works" aria-labelledby="how-title" className="scroll-mt-6 bg-canvas">
-      <div className="mx-auto max-w-[1200px] px-4 pb-20 pt-24 md:px-6 md:pb-[120px] md:pt-[120px]">
+      <div className="mx-auto max-w-[1200px] px-4 pb-4 pt-24 md:px-6 md:pb-6 md:pt-[120px]">
         <p className="font-eyebrow text-sm uppercase tracking-[0.08em]">How it works</p>
         <h2 id="how-title" className="mt-4 max-w-[900px] font-display text-[38px] leading-[1.1] md:text-[54px] md:leading-[1.05]">
           Three steps. One hard limit.

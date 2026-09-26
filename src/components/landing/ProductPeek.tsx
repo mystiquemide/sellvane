@@ -6,6 +6,16 @@ import { useToken } from "@/lib/useToken";
 
 const STAMP: Record<string, string> = { SELL: "Sold", WAIT: "Waited", SKIP: "Paused", BLOCKED: "Blocked" };
 
+type Move = import("@/lib/useToken").TokenData["decisions"][number];
+
+/** The three most telling moves: sales and refused attempts first, then the newest wait. */
+function pick(rows: Move[]): Move[] {
+  const acted = rows.filter((d) => d.action !== "WAIT" && d.action !== "SKIP");
+  const wait = rows.find((d) => d.action === "WAIT");
+  const chosen = [...(wait && rows[0]?.action === "WAIT" ? [wait] : []), ...acted].slice(0, 3);
+  return chosen.length ? chosen : rows.slice(0, 3);
+}
+
 /** Real, live excerpt of the /live page: the latest agent moves and the bypass status. */
 export function ProductPeek({ slug }: { slug: string }) {
   const s = useToken(slug);
@@ -24,7 +34,7 @@ export function ProductPeek({ slug }: { slug: string }) {
             <p className="py-3 text-sm">No agent moves yet. The agent checks every 10 minutes and every move appears here.</p>
           ) : (
             <ul>
-              {s.data.decisions.slice(0, 3).map((d) => (
+              {pick(s.data.decisions).map((d) => (
                 <li
                   key={d.id}
                   className={`flex items-center justify-between gap-3 border-b border-dashed border-ink/20 py-3 font-mono text-[13px] last:border-b-0 ${

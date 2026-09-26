@@ -29,19 +29,19 @@ export function LiveHeader({ s }: { s: LiveState }) {
           <p className="mt-4 max-w-[680px] text-lg leading-[1.6] text-muted">
             The cap, the sales and every transfer are read from Base. The agent&apos;s reasons are its own explanation, saved with each move.
           </p>
+          <p className="mt-4 font-mono text-sm text-muted" aria-live="polite">
+            {ready
+              ? `Snapshot at block ${Number(ready.block).toLocaleString("en-US")}, read ${ready.readAt.slice(11, 19)} UTC. Every section uses it. Refreshes every 30 seconds.`
+              : s.status === "loading"
+                ? "Reading Base..."
+                : "Base did not answer"}
+          </p>
           {ready && isTestToken(ready.token.symbol) ? (
             <p className="mt-5 max-w-[680px] rounded-[16px] bg-butter px-5 py-3 text-base leading-[1.5]">
               This runs on a test token Sellvane deployed on Base mainnet. The pool is small on purpose, and every transaction is real.
             </p>
           ) : null}
         </div>
-        <p className="max-w-[300px] font-mono text-sm text-muted md:text-right" aria-live="polite">
-          {ready
-            ? `Snapshot at block ${Number(ready.block).toLocaleString("en-US")}, read ${ready.readAt.slice(11, 19)} UTC. Every section uses it. Refreshes every 30 seconds.`
-            : s.status === "loading"
-              ? "Reading Base..."
-              : "Base did not answer"}
-        </p>
       </div>
 
       <dl className="mt-10 grid grid-cols-1 gap-6 border-t border-dashed border-line pt-6 sm:grid-cols-3">

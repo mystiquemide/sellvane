@@ -36,6 +36,53 @@ function Stamp({ action }: { action: Row["action"] }) {
   return <span className={`inline-block min-w-[84px] rounded-full px-3 py-1 text-center text-xs uppercase tracking-[0.06em] ${style}`}>{STAMP[action]}</span>;
 }
 
+/** Back-to-back waits read as one line, so sales and refused attempts never get buried. */
+type Group = { kind: "one"; d: Row } | { kind: "waits"; latest: Row; earliest: Row; count: number };
+
+function group(rows: Row[]): Group[] {
+  const out: Group[] = [];
+  for (const d of rows) {
+    const prev = out[out.length - 1];
+    if (d.action === "WAIT" && prev && prev.kind === "waits") {
+      prev.earliest = d;
+      prev.count += 1;
+    } else if (d.action === "WAIT" && prev && prev.kind === "one" && prev.d.action === "WAIT") {
+      out[out.length - 1] = { kind: "waits", latest: prev.d, earliest: d, count: 2 };
+    } else {
+      out.push({ kind: "one", d });
+    }
+  }
+  return out;
+}
+
+function WaitGroup({ g, dec }: { g: Extract<Group, { kind: "waits" }>; dec: number }) {
+  const hm = (iso: string) => new Date(iso).toISOString().slice(11, 16);
+  const day = (iso: string) => new Date(iso).toISOString().slice(5, 10).replace("-", "/");
+  return (
+    <li className="grid gap-x-6 gap-y-2 border-b border-dashed border-ink/20 py-5 last:border-b-0 md:grid-cols-[110px_110px_1fr_auto]">
+      <div className="font-mono text-sm">
+        <div>
+          {hm(g.earliest.at)} to {hm(g.latest.at)} UTC
+        </div>
+        <div className="text-muted">{day(g.latest.at)}</div>
+      </div>
+      <div>
+        <Stamp action="WAIT" />
+      </div>
+      <div>
+        <p className="font-mono text-[15px]">
+          Waited {g.count} times<span className="text-muted">, {tokens(g.latest.remainingBefore, dec)} left</span>
+        </p>
+        <p className="mt-2 text-base leading-[1.5]">
+          <span className="text-muted">{REASON_LABEL[g.latest.source] ?? "Note"}, latest: </span>&ldquo;{g.latest.reason}&rdquo;
+        </p>
+        <p className="mt-1 text-sm text-muted">{BY[g.latest.source] ?? g.latest.source}</p>
+      </div>
+      <div />
+    </li>
+  );
+}
+
 function Line({ d, dec }: { d: Row; dec: number }) {
   const when = new Date(d.at);
   const blocked = d.action === "BLOCKED";
@@ -66,9 +113,7 @@ function Line({ d, dec }: { d: Row; dec: number }) {
           <a href={basescanTx(d.txHash)} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
             {d.txStatus === "reverted" ? "refused tx" : "transaction"}
           </a>
-        ) : (
-          <span className="text-muted">no transaction</span>
-        )}
+        ) : null}
       </div>
     </li>
   );
@@ -110,9 +155,13 @@ export function AgentLedger({ s }: { s: LiveState }) {
             <p className="py-8 text-base">No moves yet. The first check will appear here with its reason.</p>
           ) : (
             <ul>
-              {s.data.decisions.map((d) => (
-                <Line key={d.id} d={d} dec={s.data.token.decimals} />
-              ))}
+              {group(s.data.decisions).map((g) =>
+                g.kind === "one" ? (
+                  <Line key={g.d.id} d={g.d} dec={s.data.token.decimals} />
+                ) : (
+                  <WaitGroup key={g.latest.id} g={g} dec={s.data.token.decimals} />
+                ),
+              )}
             </ul>
           )}
         </div>
